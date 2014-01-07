@@ -1,0 +1,172 @@
+<html>
+  <title>catmull-rom spline editor</title>
+  <link rel="stylesheet" type="text/css" href="style.css">
+<script type="text/javascript">
+//--------------------------------------------------------
+
+// CATMULL ROM SPLINE DEMO
+// from http://www.mvps.org/directx/articles/catmull/
+
+
+// evaluate a spline given an array of control points
+
+// control points  
+var controlx = [ ];
+var controly = [ ];
+
+var shipImage = new Image(); 
+
+function DrawControlPoints()
+{
+  var canvas = document.getElementById("glcanvas");
+  var ctx = canvas.getContext('2d');
+  // draw control points
+  for (i = 0; i<controlx.length; ++i)
+  {
+    ctx.beginPath();
+    ctx.arc(controlx[i],controly[i],3,0,2*Math.PI);
+    ctx.fillStyle = 'green';
+    ctx.fill();
+    ctx.stroke();
+  }
+}
+
+function CatmullRom( t, P )
+{
+  return 0.5 * (  (2.0*P[1]) + (P[2]-P[0])*t + (2.0*P[0]-5.0*P[1]+4.0*P[2]-P[3])*t*t + (3.0*P[1]-P[0]-3*P[2]+P[3])*t*t*t );
+}
+
+function evaluateSpline(t, CPX, CPY)
+{
+  // assume evenly spaced segments
+  var numcp = CPX.length;
+  var numsegments = numcp-3;
+  
+  // determine segment
+  var tt = t*numsegments;
+  var i = Math.floor(tt);
+  tt = tt-i;
+  
+  // the spline for the i-th segment is evaluated from
+  // controlpoints i,i+1,i+2,i+3
+  var cpx = [ CPX[i], CPX[i+1], CPX[i+2], CPX[i+3] ];
+  var cpy = [ CPY[i], CPY[i+1], CPY[i+2], CPY[i+3] ];
+  
+  var point={};
+  point.x = CatmullRom( tt, cpx );
+  point.y = CatmullRom( tt, cpy );
+  return point; 
+}
+
+function addControlPoint(event)
+{
+   var canvas = document.getElementById("glcanvas");
+   event = event || window.event;
+   
+   x = event.pageX - canvas.offsetLeft;
+   y = event.pageY - canvas.offsetTop;
+   controlx.push(x);
+   controly.push(y);
+   DrawControlPoints();
+   showCoordinates();
+}
+
+function getSplinePoints()
+{
+  // duplicate first and last control point    
+  var contpx = controlx.slice();
+  contpx.unshift(contpx[0]);
+  contpx.push(contpx[contpx.length-1]);
+  var contpy = controly.slice();
+  contpy.unshift(contpy[0]);
+  contpy.push(contpy[contpy.length-1]);
+  var points=[];
+
+  // evaluate 100 points on catmull rom spline
+  var numpts = parseInt( document.getElementById("numpts").value );
+  for (t = 0; t<1.0; t+=1.0/numpts)
+  {
+    points.push(evaluateSpline( t, contpx, contpy ));
+  }
+  return points;
+}
+
+function drawSpline()
+{
+  var canvas = document.getElementById("glcanvas");
+  var ctx = canvas.getContext('2d');
+    
+    points = getSplinePoints();
+
+    for (i=0;i<points.length;++i)
+    {
+      pt = points[i];
+      ctx.beginPath();
+      ctx.arc(pt.x,pt.y,2,0,2*Math.PI);
+      ctx.fillStyle = 'yellow';
+      ctx.fill();
+      ctx.stroke();
+    }
+}
+
+function moveShip()
+{
+   var canvas = document.getElementById("glcanvas");
+   var ctx = canvas.getContext('2d');
+ 
+   var points = getSplinePoints();
+   var i=0;
+   
+   var drawship = function() {
+      // clear background
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      pt = points[i];
+      ctx.drawImage(shipImage,pt.x,pt.y);
+      i++;
+      if (i<points.length) {
+        window.setTimeout(drawship, 15);
+      }
+   }
+   drawship();      
+}
+
+
+function clearAll()
+{
+  var canvas = document.getElementById("glcanvas");
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  controlx = [];
+  controly = [];
+  showCoordinates()
+}
+
+function runDemo()
+{
+  shipImage.src = "gfx/enemy.png";
+}
+
+function showCoordinates()
+{
+  var paragraph=document.getElementById("cpcoord");
+  paragraph.innerHTML="[" + controlx + "]<br>[" + controly + "]";
+}
+
+</script>
+</head>
+
+<!--  -->
+
+<body onload="runDemo();">
+  <canvas id="glcanvas" style="border: 1px solid black;position:relative;" width="1024" height="512" onclick="addControlPoint()"></canvas><br>
+  <p>click on canvas to set points.</p>
+<button type="button" onclick="drawSpline()">Draw Catmull-Rom Spline!</button> 
+<button type="button" onclick="moveShip()">Move Ship</button> 
+<button type="button" onclick="clearAll()">Clear</button>
+<br>
+positions: <input id="numpts" type="text" size="10" maxlength="10" value="100">
+<p><b>control points</b></p>
+<p id="cpcoord">point coordinates</p>
+</body>
+
+</html>

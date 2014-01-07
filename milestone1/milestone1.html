@@ -10,24 +10,75 @@
 		}
 	</style>
 	<script src="pixi.dev.js"></script>
-
+  <script src="engine.js"></script>
 </head>
 <body>
 <canvas id="glcanvas" style="border: 1px solid white;position:relative;" 
-        width="512" height="512" ></canvas>
+        width="1024" height="512" ></canvas>
 	<script>
+  function clone(obj) {
+      if (null == obj || "object" != typeof obj) return obj;
+      var copy = obj.constructor();
+      for (var attr in obj) {
+          if (obj.hasOwnProperty(attr)) copy[attr] = obj[attr];
+      }
+      return copy;
+  }
 
+  // APPLICATION STATE
+  
 	// create an new instance of a pixi stage
 	var stage = new PIXI.Stage(0x031300);
 
+  var canvas = document.getElementById('glcanvas');
+
 	// create a renderer instance
-	var renderer = PIXI.autoDetectRenderer(512, 512, document.getElementById('glcanvas'));
+	var renderer = PIXI.autoDetectRenderer(canvas.width, canvas.height, canvas);
 	// add the renderer view element to the DOM
 
 	var shiptexture = PIXI.Texture.fromImage("gfx/ship.png");
 	var shottexture = PIXI.Texture.fromImage("gfx/missile.png");
+	var enemytexture = PIXI.Texture.fromImage("gfx/enemy.png");
 	var ship = new PIXI.Sprite(shiptexture);
 
+  var pressedkey = new Array(256);
+  var movedirection = {
+    x:0,
+    y:0
+  };
+
+  // missiles  
+  var shots = new Array();
+
+  // enemies
+  var enemies = new Array();
+  
+  // events
+  var gameevents = new Array();
+
+  var movements = [
+    [
+      [1050,1050,1010,631,965,533,923,505,894,448,-50,-50],
+      [256,256,40,68,172,190,297,301,445,443,256,256]
+    ],
+    [
+      [1050,1050,800,341,532,24,-50,-50],
+      [256,256,457,460,276,66,256,256]    
+    ],
+    [
+      [1050,1050,960,436,437,585,583,91,-50,-5],
+      [256,256,65,249,332,334,247,450,256,256]
+    ]
+  ];
+  
+  var spawnEnemyEvent = {
+    type: "spawnenemy",
+    ctr: 30,
+    movement: 0
+  }
+  
+  gameevents.push(clone(spawnEnemyEvent));
+    
 	// center the sprites anchor point
 	ship.anchor.x = 0.5;
 	ship.anchor.y = 0.5;
@@ -37,14 +88,6 @@
 	ship.position.y = 150;
 
 	stage.addChild(ship);
-  
-  var pressedkey = new Array(256);
-  var movedirection = {
-    x:0,
-    y:0
-  };
-  
-  var shots = new Array();
 
   function keyDownHandler(event)
   {
@@ -77,19 +120,82 @@
      if(pressedkey[40]==1) { movedirection.y+=3.0; }  // down
      
      // update shots
+     removeShots=[];
      for(i=0;i<shots.length;++i)
      {
         shot = shots[i];
         shot.position.x += 10;
-        if (shot.position.x > 512)
+        if (shot.position.x > canvas.width)
         {
-           console.log(shot);
-           // remove shot
-           stage.removeChild( shot );
-           shots.splice(i, 1);        
+           stage.removeChild(shot);
+           removeShots.push(i);
         }          
+     }     
+     for( j=removeShots.length-1;j>=0;--j )
+     {
+        shots.splice(j, 1);
      }
-  }  
+
+     // update enemies
+     removeEnemies=[];
+     for (i=0; i<enemies.length; ++i)
+     {
+        var enemy = enemies[i];
+        enemy.splinet += enemy.splinetdelta;
+        if (enemy.splinet >= 0)
+        {
+           var M=movements[enemy.movement];
+           pos = evaluateSpline(enemy.splinet, M[0], M[1])
+           enemy.position.x=pos.x;
+           enemy.position.y=pos.y;
+        }
+        else 
+        {
+           stage.removeChild(enemy);
+           removeEnemies.push(i);
+        }
+     }
+     for( j=removeEnemies.length-1;j>=0;--j )
+     {
+        enemies.splice(j, 1);
+     }
+
+     // update game events
+     removeEvents=[];
+     for(i=0;i<gameevents.length;++i)
+     {
+        ge = gameevents[i];
+        ge.ctr--;
+        if (ge.ctr<0)
+        {
+           switch(ge.type)
+           {
+             case "spawnenemy" :
+               var newenemy = new PIXI.Sprite(enemytexture);
+               newenemy.splinet = 0.0;
+               newenemy.splinetdelta = 0.003;
+               newenemy.movement = ge.movement;
+               enemies.push(newenemy);
+               stage.addChild(newenemy);
+               break;
+           }
+           removeEvents.push(i);
+        }
+     }
+     for( j=removeEvents.length-1;j>=0;--j )
+     {
+        gameevents.splice(j, 1);
+     }
+     
+     // randomly spawn enemies
+     if (Math.random() < 0.05)
+     {
+        var spawn = clone(spawnEnemyEvent);
+        spawn.ctr = Math.round(Math.random()*100);
+        spawn.movement = Math.round(Math.random()*(movements.length-1));
+        gameevents.push(spawn);
+     }
+  }
 
   document.onkeydown=keyDownHandler;
   document.onkeyup=keyUpHandler;
@@ -113,3 +219,4 @@
 
 	</body>
 </html>
+

@@ -3,12 +3,13 @@
   by uli@krispel.net
 */
 
-
 function CatmullRom( t, P )
 {
   return 0.5 * (  (2.0*P[1]) + (P[2]-P[0])*t + (2.0*P[0]-5.0*P[1]+4.0*P[2]-P[3])*t*t + (3.0*P[1]-P[0]-3*P[2]+P[3])*t*t*t );
 }
 
+// CPX and CPY are arrays of x- and y- coordinates of control points
+// t=0..1
 function evaluateSpline(t, CPX, CPY)
 {
   // assume evenly spaced segments
