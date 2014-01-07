@@ -32,3 +32,23 @@ function evaluateSpline(t, CPX, CPY)
   return point; 
 }
 
+function rectoverlap(RectA, RectB)
+{
+  return (RectA.x < (RectB.x+RectB.width) && 
+           (RectA.x+RectA.width) > RectB.x && 
+           RectA.y < (RectB.y+RectB.height) && 
+           (RectA.y+RectA.height) >RectB.y) 
+}
+
+function getSpriteRect(sprite)
+{
+  // todo: account for anchor
+  return new PIXI.Rectangle( sprite.position.x, sprite.position.y,
+     sprite.width, sprite.height );
+    
+}
+
+function collide(spriteA, spriteB)
+{
+  return rectoverlap(getSpriteRect(spriteA),getSpriteRect(spriteB));
+}
