@@ -141,15 +141,13 @@
      for (i=0; i<enemies.length; ++i)
      {
         var enemy = enemies[i];
+        var M=movements[enemy.movement];
+        var pos = evaluateSpline(enemy.splinet, M[0], M[1])
+        enemy.position.x=pos.x;
+        enemy.position.y=pos.y;
+        
         enemy.splinet += enemy.splinetdelta;
-        if (enemy.splinet >= 0)
-        {
-           var M=movements[enemy.movement];
-           pos = evaluateSpline(enemy.splinet, M[0], M[1])
-           enemy.position.x=pos.x;
-           enemy.position.y=pos.y;
-        }
-        else 
+        if (enemy.splinet < 0) 
         {
            stage.removeChild(enemy);
            removeEnemies.push(i);
@@ -175,6 +173,10 @@
                newenemy.splinet = 0.0;
                newenemy.splinetdelta = 0.003;
                newenemy.movement = ge.movement;
+               var M=movements[newenemy.movement];
+               var pos = evaluateSpline(newenemy.splinet, M[0], M[1])
+               newenemy.position.x=pos.x;
+               newenemy.position.y=pos.y;               
                enemies.push(newenemy);
                stage.addChild(newenemy);
                break;
