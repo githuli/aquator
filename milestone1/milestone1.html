@@ -1,7 +1,7 @@
 <!DOCTYPE HTML>
 <html>
 <head>
-	<title>pixi.js example 1</title>
+	<title>aquator milestone 1</title>
 	<style>
 		body {
 			margin: 0;
@@ -24,10 +24,9 @@
 	var renderer = PIXI.autoDetectRenderer(512, 512, document.getElementById('glcanvas'));
 	// add the renderer view element to the DOM
 
-	// create a texture from an image path
-	var texture = PIXI.Texture.fromImage("gfx/ship.png");
-	// create a new Sprite using the texture
-	var ship = new PIXI.Sprite(texture);
+	var shiptexture = PIXI.Texture.fromImage("gfx/ship.png");
+	var shottexture = PIXI.Texture.fromImage("gfx/missile.png");
+	var ship = new PIXI.Sprite(shiptexture);
 
 	// center the sprites anchor point
 	ship.anchor.x = 0.5;
@@ -44,10 +43,23 @@
     x:0,
     y:0
   };
+  
+  var shots = new Array();
 
   function keyDownHandler(event)
   {
      pressedkey[event.keyCode] = 1;
+     
+     switch(event.keyCode)
+     {
+        case 32 : // shots fired :)
+          var shot = new PIXI.Sprite(shottexture);
+          shot.position.x = ship.position.x+22;
+          shot.position.y = ship.position.y+5;
+          stage.addChild(shot);
+          shots.push(shot);
+          break;
+     }
   }
   
   function keyUpHandler(event)
@@ -55,13 +67,28 @@
      pressedkey[event.keyCode] = 0;
   }
   
-  function updateMovement()
+  function update()
   {
+     // update movement
      movedirection.x=0; movedirection.y=0;
-     if(pressedkey[37]==1) { movedirection.x-=2.0; }
-     if(pressedkey[38]==1) { movedirection.y-=2.0; }
-     if(pressedkey[39]==1) { movedirection.x+=2.0; }
-     if(pressedkey[40]==1) { movedirection.y+=2.0; }
+     if(pressedkey[37]==1) { movedirection.x-=3.0; }  // left
+     if(pressedkey[38]==1) { movedirection.y-=3.0; }  // up
+     if(pressedkey[39]==1) { movedirection.x+=3.0; }  // right
+     if(pressedkey[40]==1) { movedirection.y+=3.0; }  // down
+     
+     // update shots
+     for(i=0;i<shots.length;++i)
+     {
+        shot = shots[i];
+        shot.position.x += 10;
+        if (shot.position.x > 512)
+        {
+           console.log(shot);
+           // remove shot
+           stage.removeChild( shot );
+           shots.splice(i, 1);        
+        }          
+     }
   }  
 
   document.onkeydown=keyDownHandler;
@@ -73,7 +100,7 @@
       
       requestAnimFrame( animate );
       
-      updateMovement();
+      update();
       
       ship.position.x += movedirection.x;
       ship.position.y += movedirection.y;
