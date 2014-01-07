@@ -1,0 +1,28 @@
+<html>
+  <head>
+    <meta charset="UTF-8">
+    <title>aquator milestone 1</title>
+    <script src="pixi.dev.js"></script>
+  </head>
+  <body onload="init()">
+  
+    <div align="center">
+      <canvas style="border: 1px solid black;position:relative;" 
+              id="game-canvas" width="512" height="512"></canvas>
+    </div>
+    
+  <script>
+    function init() {
+      console.log("init() successfully called.");
+    }
+  stage = new PIXI.Stage(0x000000);
+  renderer = PIXI.autoDetectRenderer(
+    512,
+    512,
+    document.getElementById("game-canvas")
+  );
+  renderer.render(stage);
+  </script>
+  
+  </body>
+</html>
