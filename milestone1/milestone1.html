@@ -1,28 +1,88 @@
+<!DOCTYPE HTML>
 <html>
-  <head>
-    <meta charset="UTF-8">
-    <title>aquator milestone 1</title>
-    <script src="pixi.dev.js"></script>
-  </head>
-  <body onload="init()">
+<head>
+	<title>pixi.js example 1</title>
+	<style>
+		body {
+			margin: 0;
+			padding: 0;
+			background-color: #000000;
+		}
+	</style>
+	<script src="pixi.dev.js"></script>
+
+</head>
+<body>
+<canvas id="glcanvas" style="border: 1px solid white;position:relative;" 
+        width="512" height="512" ></canvas>
+	<script>
+
+	// create an new instance of a pixi stage
+	var stage = new PIXI.Stage(0x031300);
+
+	// create a renderer instance
+	var renderer = PIXI.autoDetectRenderer(512, 512, document.getElementById('glcanvas'));
+	// add the renderer view element to the DOM
+
+	// create a texture from an image path
+	var texture = PIXI.Texture.fromImage("gfx/ship.png");
+	// create a new Sprite using the texture
+	var ship = new PIXI.Sprite(texture);
+
+	// center the sprites anchor point
+	ship.anchor.x = 0.5;
+	ship.anchor.y = 0.5;
+
+	// move the sprite t the center of the screen
+	ship.position.x = 200;
+	ship.position.y = 150;
+
+	stage.addChild(ship);
   
-    <div align="center">
-      <canvas style="border: 1px solid black;position:relative;" 
-              id="game-canvas" width="512" height="512"></canvas>
-    </div>
-    
-  <script>
-    function init() {
-      console.log("init() successfully called.");
-    }
-  stage = new PIXI.Stage(0x000000);
-  renderer = PIXI.autoDetectRenderer(
-    512,
-    512,
-    document.getElementById("game-canvas")
-  );
-  renderer.render(stage);
-  </script>
+  var pressedkey = new Array(256);
+  var movedirection = {
+    x:0,
+    y:0
+  };
+
+  function keyDownHandler(event)
+  {
+     pressedkey[event.keyCode] = 1;
+  }
   
-  </body>
+  function keyUpHandler(event)
+  {
+     pressedkey[event.keyCode] = 0;
+  }
+  
+  function updateMovement()
+  {
+     movedirection.x=0; movedirection.y=0;
+     if(pressedkey[37]==1) { movedirection.x-=2.0; }
+     if(pressedkey[38]==1) { movedirection.y-=2.0; }
+     if(pressedkey[39]==1) { movedirection.x+=2.0; }
+     if(pressedkey[40]==1) { movedirection.y+=2.0; }
+  }  
+
+  document.onkeydown=keyDownHandler;
+  document.onkeyup=keyUpHandler;
+  
+	requestAnimFrame( animate );
+	
+	function animate() {
+      
+      requestAnimFrame( animate );
+      
+      updateMovement();
+      
+      ship.position.x += movedirection.x;
+      ship.position.y += movedirection.y;
+	    
+	    // render the stage
+	    renderer.render(stage);
+	}
+
+	</script>
+
+	</body>
 </html>
