@@ -57,7 +57,7 @@
 
   // enemies
   var enemies = new Array();
-  
+  var explosions = new Array();
   // events
   var gameevents = new Array();
 
@@ -171,6 +171,9 @@
        {
           if (collide(enemies[e],shots[s]))
           {
+            var ee = clone(explodeEnemyEvent);
+            ee.enemy=enemies[e];
+            gameevents.push(ee);
           }
        }
        
@@ -204,19 +207,38 @@
                stage.addChild(newenemy);
                break;
              case "removesprite" :
+               if( ge.sprite == null || ge.sprite.parent == null)
+               {
+                  alert("brak");
+               }
                stage.removeChild(ge.sprite);
                ge.container.splice( ge.container.indexOf(ge.sprite), 1);
                break;
              case "explodeenemy" :
+               // remove enemy
+               var re = clone(removeSpriteEvent);
+               re.container=enemies;
+               re.sprite=ge.enemy;
+               gameevents.push(re);
+               // create explosion and remove automatically
+               var explosion=new PIXI.Sprite(explosiontexture);
+               explosion.position.x=ge.enemy.position.x;
+               explosion.position.y=ge.enemy.position.y;
+               explosions.push(explosion);
+               stage.addChild(explosion);
+               var rex = clone(removeSpriteEvent);
+               rex.container=explosions;
+               rex.sprite=explosion;
+               rex.ctr=30;
+               gameevents.push(rex);
                break;
-               
            }
-           removeEvents.push(i);
+           removeEvents.push(ge);
         }
      }
-     for( j=removeEvents.length-1;j>=0;--j )
+     for( e=0;e<removeEvents.length;++e )
      {
-        gameevents.splice(removeEvents[j], 1);
+        gameevents.splice( gameevents.indexOf(removeEvents[e]), 1);
      }
      
      // randomly spawn enemies
