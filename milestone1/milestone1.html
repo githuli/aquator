@@ -157,6 +157,7 @@ function update() {
       var rs = clone(removeSpriteEvent);
       rs.container = shots;
       rs.sprite = shot;
+      rs.status = "shot out of bounds";
       gameevents.push(rs);
     }
   }
@@ -174,6 +175,7 @@ function update() {
       var re = clone(removeSpriteEvent);
       re.container = enemies;
       re.sprite = enemy;
+      re.status = "end enemy movment";
       gameevents.push(re);
     }
   }
@@ -182,14 +184,17 @@ function update() {
   // compare all shots vs. all enemies (this is SLOW)
   for (e = 0; e < enemies.length; ++e) {
     for (s = 0; s < shots.length; ++s) {
-      if (collide(enemies[e], shots[s])) {
+      if (collide(enemies[e], shots[s]) && !shots[s].hasOwnProperty("dead")) {
         var ee = clone(explodeEnemyEvent);
         ee.enemy = enemies[e];
         gameevents.push(ee);
         var rs = clone(removeSpriteEvent);
         rs.sprite = shots[s];
         rs.container = shots;
+        rs.status = "enemy hit, remove shot";
+        shots[s].dead = true;
         gameevents.push(rs);
+        s=shots.length;
       }
     }
 
@@ -222,7 +227,7 @@ function update() {
           break;
         case "removesprite":
           if (ge.sprite == null || ge.sprite.parent == null) {
-            alert("brak");
+            alert("brak:"+ge.status);
           } else {
             stage.removeChild(ge.sprite);
             if (ge.container != null) {
@@ -235,6 +240,7 @@ function update() {
           var re = clone(removeSpriteEvent);
           re.container = enemies;
           re.sprite = ge.enemy;
+          re.status = "enemy explodes";
           gameevents.push(re);
           var ex = clone(explosionEvent);
           ex.x = ge.enemy.position.x;
@@ -252,6 +258,7 @@ function update() {
           rex.container = explosions;
           rex.sprite = explosion;
           rex.ctr = 30;
+          rex.status = "remove explosion";
           gameevents.push(rex);
           break;
         case "explodeship":
