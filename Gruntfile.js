@@ -6,7 +6,7 @@ module.exports = function(grunt){
     grunt.initConfig({
         connect: {
             server: {
-                options: {
+              options: {
                     port: 1337,
                     base: './'
                 }

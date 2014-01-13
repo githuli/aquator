@@ -1,5 +1,5 @@
 {
-  "name": "aquator".
+  "name": "aquator",
   "devDependencies": {
     "coffee-script": "*",
     "bower": "*",
@@ -14,6 +14,6 @@
     "build": "npm install && bower install && grunt"
   },
   "dependencies": {
-    "pixi.js": "~1.4.2"
+    "pixi.js": "~1.4.1"
   }
 }
