@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # Base Class
 #
-class Base
+class window.Base
   constructor: () ->
     mixin = {}
     initArgs = []
@@ -18,7 +18,10 @@ class Base
             initArgs.push arg
         isFirst = false
      
-    @name = method for name, method of mixin    
+    # set defaults
+    @[name] = method for name, method of @defaults
+    # merge mixin
+    @[name] = method for name, method of mixin    
 
     # If this class has an init method it will
     # it will be called with initArgs
@@ -29,7 +32,7 @@ class Base
 # Catmull-Rom Splines
 #
 
-CatmullRom =
+window.CatmullRom =
     evaluateSegment : (t, P) ->
         0.5 * (  (2.0*P[1]) + (P[2]-P[0])*t + (2.0*P[0]-5.0*P[1]+4.0*P[2]-P[3])*t*t + (3.0*P[1]-P[0]-3*P[2]+P[3])*t*t*t )
     
@@ -53,16 +56,118 @@ CatmullRom =
 # Pixi.js Tools
 #
 #
-PixiJSTools =
+window.PixiJSTools =
     getSpriteRect : (sprite) ->
         new PIXI.Rectangle( sprite.position.x, sprite.position.y, sprite.width, sprite.height );
 
 #------------------------------------------------------------------------------
 # Collision Detection
 #
-CollisionDetection =
+window.CollisionDetection =
     overlapRect : (RectA, RectB) ->
         (RectA.x < (RectB.x+RectB.width) && (RectA.x+RectA.width) > RectB.x && RectA.y < (RectB.y+RectB.height) &&         (RectA.y+RectA.height) >RectB.y) 
 
     collideSprite : (A, B) ->
         CollisionDetection.overlapRect(PixiJSTools.getSpriteRect(A), PixiJSTools.getSpriteRect(B))
+
+#------------------------------------------------------------------------------
+# Game Logic Engine
+#
+
+class window.GameObject extends Base
+    defaults:
+        type: 'none'
+
+    update : ->
+        @
+
+    activate : (stage) ->
+        @
+
+    deactivate : (stage) ->
+        @
+
+class window.SpriteObject extends GameObject
+    defaults:
+        type: 'sprite'
+
+    setFromTexture : (tex) ->
+        @sprite = new PIXI.Sprite(shiptexture)
+        @
+
+    activate : (stage) ->
+        stage.addChild(@sprite)
+        @
+
+    deactivate : () ->
+        if (@sprite.parent != null)
+            @sprite.parent.removeChild(@sprite)
+        @
+
+
+class window.AnimatedSpriteObject extends GameObject
+    defaults:
+        type: 'spriteclip'
+
+    setFromTextures : (texarr) ->
+        @clip = new PIXI.MovieClip(texarr)
+
+    activate : (stage) ->
+       stage.addChild(@clip)
+
+    deactivate : () ->
+        if (@clip.parent != null)
+            @clip.parent.removeChild(@clip)
+        @
+
+
+class window.GameObjectRepository
+    # the storage contains an array for each type of game object
+    constructor : ->
+        @storage = {}
+
+    # every GameObject has to supply a member named 'type'
+    createGObject : (gobj) ->
+        @storage[gobj.type].push(gobj)
+
+    removeGObject : (gobj) ->
+        if @storage.hasOwnProperty(gobj.type)
+            index = @storage[gobj].indexOf(gobj)
+            if (index > -1)
+                @storage[gobj].splice(index, 1)
+
+    getGObjects : (type) ->
+        @storage[type]
+
+    getAllGobjects : () ->
+        obj = []
+        obj = obj.concat(value) for name, value of @storage
+        obj
+
+window.GOR = new GameObjectRepository()
+
+class window.GameEvent extends Base
+    defaults:
+       ctr: 0,
+       type: 'void'
+
+    execute : () ->
+        @
+
+    update : () ->
+        @ctr--
+        if (@ctr < 0)
+            @execute()
+        @
+
+class window.RemoveSpriteEvent extends GameEvent
+    defaults:
+        ctr: 10,
+        type: 'destroygobj',
+        sprite: null,
+        container: null
+
+    execute : () ->
+        if @sprite != null
+            @sprite.parent.removeChild(@sprite)
+        GOR.removeGObject(@sprite)
