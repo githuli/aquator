@@ -1,0 +1,19 @@
+{
+  "name": "aquator".
+  "devDependencies": {
+    "coffee-script": "*",
+    "bower": "*",
+    "grunt": "*",
+    "grunt-cli": "*",
+    "grunt-contrib-coffee": "*",
+    "grunt-contrib-watch": "*",
+    "grunt-contrib-connect": "*",
+    "testem": "*"
+  },
+  "scripts": {
+    "build": "npm install && bower install && grunt"
+  },
+  "dependencies": {
+    "pixi.js": "~1.4.2"
+  }
+}
