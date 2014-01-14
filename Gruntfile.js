@@ -26,7 +26,7 @@ module.exports = function(grunt){
         },
         watch: {
             coffee: {
-                files: ['src/*.coffee', 'tests/*.coffee'],
+                files: ['src/*.coffee'],
                 tasks: 'coffee'
             }
         }
