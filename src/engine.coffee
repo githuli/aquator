@@ -187,10 +187,10 @@ class RemoveSpriteEvent extends GameEvent
 class AssetLibrary extends Base
 
     defaults:
-        sprites: {}
-        spriteclips: {}
+        spriteassets: {}
+        spriteclipassets: {}
 
     init : () ->
-
-
-
+        @sprites = []
+        for name, value in spriteassets
+            
