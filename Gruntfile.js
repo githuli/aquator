@@ -19,7 +19,8 @@ module.exports = function(grunt){
                 },
                 files: {
                     'js/game.js': [
-                        'src/engine.coffee'
+                        'src/engine.coffee',
+                        'src/aquator.coffee',
                     ],
                 }
             },

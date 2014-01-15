@@ -1,7 +1,7 @@
 #------------------------------------------------------------------------------
 # Base Class
 #
-class window.Base
+class Base
   constructor: () ->
     mixin = {}
     initArgs = []
@@ -32,7 +32,7 @@ class window.Base
 # Catmull-Rom Splines
 #
 
-window.CatmullRom =
+CatmullRom =
     evaluateSegment : (t, P) ->
         0.5 * (  (2.0*P[1]) + (P[2]-P[0])*t + (2.0*P[0]-5.0*P[1]+4.0*P[2]-P[3])*t*t + (3.0*P[1]-P[0]-3*P[2]+P[3])*t*t*t )
     
@@ -56,14 +56,14 @@ window.CatmullRom =
 # Pixi.js Tools
 #
 #
-window.PixiJSTools =
+PixiJSTools =
     getSpriteRect : (sprite) ->
         new PIXI.Rectangle( sprite.position.x, sprite.position.y, sprite.width, sprite.height );
 
 #------------------------------------------------------------------------------
 # Collision Detection
 #
-window.CollisionDetection =
+CollisionDetection =
     overlapRect : (RectA, RectB) ->
         (RectA.x < (RectB.x+RectB.width) && (RectA.x+RectA.width) > RectB.x && RectA.y < (RectB.y+RectB.height) &&         (RectA.y+RectA.height) >RectB.y) 
 
@@ -74,7 +74,7 @@ window.CollisionDetection =
 # Game Logic Engine
 #
 
-class window.GameObject extends Base
+class GameObject extends Base
     defaults:
         type: 'none'
 
@@ -87,7 +87,7 @@ class window.GameObject extends Base
     deactivate : (stage) ->
         @
 
-class window.SpriteObject extends GameObject
+class SpriteObject extends GameObject
     defaults:
         type: 'sprite'
 
@@ -105,7 +105,7 @@ class window.SpriteObject extends GameObject
         @
 
 
-class window.AnimatedSpriteObject extends GameObject
+class AnimatedSpriteObject extends GameObject
     defaults:
         type: 'spriteclip'
 
@@ -121,7 +121,7 @@ class window.AnimatedSpriteObject extends GameObject
         @
 
 
-class window.GameObjectRepository
+class GameObjectRepository
     # the storage contains an array for each type of game object
     constructor : ->
         @storage = {}
@@ -144,9 +144,18 @@ class window.GameObjectRepository
         obj = obj.concat(value) for name, value of @storage
         obj
 
-window.GOR = new GameObjectRepository()
+#------------------------------------------------------------------------------
+# GameEvent Mechanism
 
-class window.GameEvent extends Base
+class GameEventHandler
+    constructor : ->
+        @events = []
+
+    update : ->
+        gevent.update() for gevent in events
+        @
+
+class GameEvent extends Base
     defaults:
        ctr: 0,
        type: 'void'
@@ -160,7 +169,7 @@ class window.GameEvent extends Base
             @execute()
         @
 
-class window.RemoveSpriteEvent extends GameEvent
+class RemoveSpriteEvent extends GameEvent
     defaults:
         ctr: 10,
         type: 'destroygobj',
@@ -171,3 +180,17 @@ class window.RemoveSpriteEvent extends GameEvent
         if @sprite != null
             @sprite.parent.removeChild(@sprite)
         GOR.removeGObject(@sprite)
+
+#------------------------------------------------------------------------------
+# Asset Library
+
+class AssetLibrary extends Base
+
+    defaults:
+        sprites: {}
+        spriteclips: {}
+
+    init : () ->
+
+
+
