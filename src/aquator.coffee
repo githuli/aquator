@@ -3,12 +3,21 @@ class Game
 	constructor : () ->
 		@repository = new GameObjectRepository()
 		@eventhandler = new GameEventHandler()
-		@eventhandler = new AssetLibrary(
-	        spriteassets:
-	            ship : "ship.png",
-	            missile : "missile.png",
-	            enemy : "enemy.png",
-	            explosion : "plop.png"
-	        spriteclipassets:
-	            clip1 : [ "gfx/test{0}.png", 30 ]	        	
-			)
+		@assets = new AssetLibrary(
+	        sprites:
+	            ship : { file: "ship.png" },
+	            missile : { file: "missile.png" },
+	            enemy : { file: "enemy.png" },
+	            explosion : { file: "plop.png" },
+	            clip1 : { file: "gfx/test{0}.png", startframe:0, endframe:30 }
+	        datadir:
+	        	'res/sprites/'
+		)
+
+	start : () ->
+		console.log("starting up AQUATOR..")
+		@
+
+
+window.AquatorGame = new Game()
+window.AquatorGame.start()

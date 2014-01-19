@@ -187,10 +187,17 @@ class RemoveSpriteEvent extends GameEvent
 class AssetLibrary extends Base
 
     defaults:
-        spriteassets: {}
-        spriteclipassets: {}
+        datadir: './',
+        textures: {},
+        sprites:  {},
+        useSpriteSheets: false
 
     init : () ->
-        @sprites = []
-        for name, value in spriteassets
-            
+        # load from files        
+        for name, value of @sprites
+            if value.hasOwnProperty('endframe')
+                # animated sprite
+
+            else
+                if !@textures.hasOwnProperty(name) and value.hasOwnProperty('file')
+                    @textures[name] = new PIXI.Texture.fromImage(@datadir + value.file)
