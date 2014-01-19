@@ -2,6 +2,7 @@ module.exports = function(grunt){
     grunt.loadNpmTasks('grunt-contrib-coffee');
     grunt.loadNpmTasks('grunt-contrib-watch');
     grunt.loadNpmTasks('grunt-contrib-connect');
+    grunt.loadNpmTasks('grunt-coffee-jshint');
 
     grunt.initConfig({
         connect: {
@@ -10,6 +11,14 @@ module.exports = function(grunt){
                     port: 1337,
                     base: './'
                 }
+            }
+        },
+        coffee_jshint: {
+            options: {
+                "indent": 4,
+            },
+            files: {
+                'src': 'src/*.coffee'
             }
         },
         coffee:{
@@ -28,7 +37,7 @@ module.exports = function(grunt){
         watch: {
             coffee: {
                 files: ['src/*.coffee'],
-                tasks: 'coffee'
+                tasks: ['coffee']
             }
         }
     });
