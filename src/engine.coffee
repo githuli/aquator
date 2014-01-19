@@ -78,7 +78,7 @@ class GameObject extends Base
     defaults:
         type: 'none'
 
-    update : ->
+    update : (game) ->
         @
 
     activate : (stage) ->
@@ -90,20 +90,11 @@ class GameObject extends Base
 class SpriteObject extends GameObject
     defaults:
         type: 'sprite'
-
-    setFromTexture : (tex) ->
-        @sprite = new PIXI.Sprite(shiptexture)
-        @
-
-    activate : (stage) ->
-        stage.addChild(@sprite)
-        @
-
-    deactivate : () ->
-        if (@sprite.parent != null)
-            @sprite.parent.removeChild(@sprite)
-        @
-
+        asset: 'none'
+        position: 
+            x: 0
+            y: 0
+        sprite: null
 
 class AnimatedSpriteObject extends GameObject
     defaults:
@@ -128,6 +119,8 @@ class GameObjectRepository
 
     # every GameObject has to supply a member named 'type'
     createGObject : (gobj) ->
+        if !@storage.hasOwnProperty(gobj.type)
+            @storage[gobj.type]=[]
         @storage[gobj.type].push(gobj)
 
     removeGObject : (gobj) ->
@@ -152,8 +145,17 @@ class GameEventHandler
         @events = []
 
     update : ->
-        gevent.update() for gevent in events
+        remove = []
+        for gevent in @events
+            if gevent.update() 
+                remove.push(gevent)
+        # remove finished events
+        for removeme in remove
+            events.splice(events.indexOf(removeme),1)
         @
+
+    createEvent : (e) ->
+        @events.push(e)
 
 class GameEvent extends Base
     defaults:
@@ -167,7 +169,8 @@ class GameEvent extends Base
         @ctr--
         if (@ctr < 0)
             @execute()
-        @
+            return true
+        return false
 
 class RemoveSpriteEvent extends GameEvent
     defaults:
@@ -189,7 +192,6 @@ class AssetLibrary extends Base
     defaults:
         datadir: './',
         textures: {},
-        sprites:  {},
         useSpriteSheets: false
 
     init : () ->
@@ -197,7 +199,9 @@ class AssetLibrary extends Base
         for name, value of @sprites
             if value.hasOwnProperty('endframe')
                 # animated sprite
-
+                # TODO
             else
                 if !@textures.hasOwnProperty(name) and value.hasOwnProperty('file')
-                    @textures[name] = new PIXI.Texture.fromImage(@datadir + value.file)
+                    @textures[name] = PIXI.Texture.fromImage(@datadir + value.file)
+
+    
