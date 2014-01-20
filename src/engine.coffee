@@ -2,31 +2,31 @@
 # Base Class
 #
 class Base
-  constructor: () ->
-    mixin = {}
-    initArgs = []
+    constructor: () ->
+        mixin = {}
+        initArgs = []
 
-    isFirst = true
-    for arg in arguments
-        # If the first argument is an object
-        # use it to extend this new Instance
-        if typeof arg == 'object' && isFirst
-            mixin = arg
-        # Otherwise add it to an array that we'll
-        # pass to the objects init method 
-        else
-            initArgs.push arg
-        isFirst = false
-     
-    # set defaults
-    @[name] = method for name, method of @defaults
-    # merge mixin
-    @[name] = method for name, method of mixin    
+        isFirst = true
+        for arg in arguments
+            # If the first argument is an object
+            # use it to extend this new Instance
+            if typeof arg == 'object' && isFirst
+                mixin = arg
+            # Otherwise add it to an array that we'll
+            # pass to the objects init method 
+            else
+                initArgs.push arg
+            isFirst = false
+         
+        # set defaults
+        @[name] = method for name, method of @defaults
+        # merge mixin
+        @[name] = method for name, method of mixin    
 
-    # If this class has an init method it will
-    # it will be called with initArgs
-    if(@['init'])
-        @init.apply(@, initArgs)
+        # If this class has an init method it will
+        # it will be called with initArgs
+        if(@['init'])
+            @init.apply(@, initArgs)
 
 #------------------------------------------------------------------------------
 # Catmull-Rom Splines
@@ -75,8 +75,8 @@ CollisionDetection =
 #
 
 class GameObject extends Base
-    defaults:
-        type: 'none'
+    @constructor: () ->
+        @type = 'none'
 
     update : (game) ->
         @
@@ -86,31 +86,6 @@ class GameObject extends Base
 
     deactivate : (stage) ->
         @
-
-class SpriteObject extends GameObject
-    defaults:
-        type: 'sprite'
-        asset: 'none'
-        position: 
-            x: 0
-            y: 0
-        sprite: null
-
-class AnimatedSpriteObject extends GameObject
-    defaults:
-        type: 'spriteclip'
-
-    setFromTextures : (texarr) ->
-        @clip = new PIXI.MovieClip(texarr)
-
-    activate : (stage) ->
-       stage.addChild(@clip)
-
-    deactivate : () ->
-        if (@clip.parent != null)
-            @clip.parent.removeChild(@clip)
-        @
-
 
 class GameObjectRepository
     # the storage contains an array for each type of game object
@@ -158,9 +133,10 @@ class GameEventHandler
         @events.push(e)
 
 class GameEvent extends Base
-    defaults:
-       ctr: 0,
-       type: 'void'
+
+    constructor : () ->
+        @ctr = 0
+        @type = 'void'
 
     execute : () ->
         @
@@ -173,11 +149,9 @@ class GameEvent extends Base
         return false
 
 class RemoveSpriteEvent extends GameEvent
-    defaults:
-        ctr: 10,
-        type: 'destroygobj',
-        sprite: null,
-        container: null
+
+    constructor : () ->
+        @type = 'destroygobj'
 
     execute : () ->
         if @sprite != null

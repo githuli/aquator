@@ -1,6 +1,23 @@
-class PlayerShip extends SpriteObject
-    defaults:
-        asset: "ship"
+# 
+class StandardShot extends GameObject
+    constructor: (x, y) ->
+        @type = "sprite"
+        @asset = "missile"
+        @position = 
+          x: x
+          y: y
+
+    update : (game) ->
+        @sprite.position.x += 15
+        if @sprite.position.x > game.canvas.width
+            game.createEvent(
+                new RemoveSpriteEvent({ sprite: @ })
+            )
+
+class PlayerShip extends GameObject
+    constructor: () ->
+        @type = "sprite"
+        @asset ="ship"
 
     update : (game) ->
         # ship movement is controlled by keyboard
@@ -13,20 +30,15 @@ class PlayerShip extends SpriteObject
         movement.y += 4.0 if game.keys[40]==1
         @sprite.position.x += movement.x
         @sprite.position.y += movement.y
+        # fire shots with space bar
+        if game.keys[32]==1
+            game.createSprite(new StandardShot(@sprite.position.x+22,@sprite.position.y+5))
         @
 
-class StandardShot extends SpriteObject
-    defaults:
-        asset: "missile"
-
-    update : (game) ->
-        @position.x += 15
-        if @position.x > game.canvas.width
-            game.createEvent(
-                new RemoveSpriteEvent({ sprite: @ })
-            )
 
 #------------------------------------------------------------
+# The main game class holds state and 
+
 class Game
     constructor : () ->
         @keys = new Array(256)
@@ -34,11 +46,11 @@ class Game
         @eventhandler = new GameEventHandler()
         @assets = new AssetLibrary(
             sprites:
-                ship : { file: "ship.png" },
+                ship :    { file: "ship.png" },
                 missile : { file: "missile.png" },
-                enemy : { file: "enemy.png" },
+                enemy :   { file: "enemy.png" },
                 explosion : { file: "plop.png" },
-                clip1 : { file: "gfx/test{0}.png", startframe:0, endframe:30 }
+                clip1 :   { file: "gfx/test{0}.png", startframe:0, endframe:30 }
             datadir:
                 'res/sprites/'
         )
@@ -48,7 +60,11 @@ class Game
 
     createSprite : (sobj) ->
         # create sprite with texture from asset library
-        sobj.sprite = new PIXI.Sprite(@assets.textures[sobj.asset])
+        texture = @assets.textures[sobj.asset]
+        sobj.sprite = new PIXI.Sprite(texture)
+        if sobj.hasOwnProperty('position')
+            sobj.sprite.position.x = sobj.position.x
+            sobj.sprite.position.y = sobj.position.y
         @repository.createGObject(sobj)
         @stage.addChild(sobj.sprite)
 
