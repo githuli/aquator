@@ -29,6 +29,17 @@ class Base
             @init.apply(@, initArgs)
 
 #------------------------------------------------------------------------------
+# 
+#
+Tools = 
+    clampValue : (val, min, max) ->
+        if val<min
+            return min
+        if val>max
+            return max
+        return val
+
+#------------------------------------------------------------------------------
 # Catmull-Rom Splines
 #
 
@@ -100,9 +111,9 @@ class GameObjectRepository
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)
-            index = @storage[gobj].indexOf(gobj)
+            index = @storage[gobj.type].indexOf(gobj)
             if (index > -1)
-                @storage[gobj].splice(index, 1)
+                @storage[gobj.type].splice(index, 1)
 
     getGObjects : (type) ->
         @storage[type]
@@ -126,7 +137,7 @@ class GameEventHandler
                 remove.push(gevent)
         # remove finished events
         for removeme in remove
-            events.splice(events.indexOf(removeme),1)
+            @events.splice(@events.indexOf(removeme),1)
         @
 
     createEvent : (e) ->
@@ -150,13 +161,16 @@ class GameEvent extends Base
 
 class RemoveSpriteEvent extends GameEvent
 
-    constructor : () ->
+    constructor : (GOR, gob) ->
+        @ctr = 0
         @type = 'destroygobj'
+        @GOR = GOR
+        @gob = gob
 
     execute : () ->
-        if @sprite != null
-            @sprite.parent.removeChild(@sprite)
-        GOR.removeGObject(@sprite)
+        if @gob.sprite != null and @gob.sprite.parent != null
+            @gob.sprite.parent.removeChild(@gob.sprite)
+        @GOR.removeGObject(@gob)
 
 #------------------------------------------------------------------------------
 # Asset Library

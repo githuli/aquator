@@ -11,7 +11,7 @@ class StandardShot extends GameObject
         @sprite.position.x += 15
         if @sprite.position.x > game.canvas.width
             game.createEvent(
-                new RemoveSpriteEvent({ sprite: @ })
+                new RemoveSpriteEvent(game.repository, @)
             )
 
 class PlayerShip extends GameObject
@@ -28,8 +28,8 @@ class PlayerShip extends GameObject
         movement.y -= 4.0 if game.keys[38]==1
         movement.x += 4.0 if game.keys[39]==1
         movement.y += 4.0 if game.keys[40]==1
-        @sprite.position.x += movement.x
-        @sprite.position.y += movement.y
+        @sprite.position.x = Tools.clampValue(@sprite.position.x+movement.x,0,game.canvas.width-@sprite.width)
+        @sprite.position.y = Tools.clampValue(@sprite.position.y+movement.y,0,game.canvas.height-@sprite.height)
         # fire shots with space bar
         if game.keys[32]==1
             game.createSprite(new StandardShot(@sprite.position.x+22,@sprite.position.y+5))
@@ -103,5 +103,6 @@ class Game
         @mainLoop()
         @
 
+window.Tools = Tools
 window.AquatorGame = new Game()
 window.AquatorGame.start()
