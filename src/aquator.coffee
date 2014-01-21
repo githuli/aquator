@@ -7,6 +7,8 @@ class StandardShot extends GameObject
           x: x
           y: y
 
+    initialize : (game) ->
+
     update : (game) ->
         @sprite.position.x += 15
         if @sprite.position.x > game.canvas.width
@@ -18,6 +20,10 @@ class PlayerShip extends GameObject
     constructor: () ->
         @type = "sprite"
         @asset ="ship"
+
+    initialize : (game) ->
+        @sprite.scale.x = 0.25
+        @sprite.scale.y = 0.25
 
     update : (game) ->
         # ship movement is controlled by keyboard
@@ -66,6 +72,8 @@ class Game
             sobj.sprite.position.x = sobj.position.x
             sobj.sprite.position.y = sobj.position.y
         @repository.createGObject(sobj)
+        if sobj.initialize
+            sobj.initialize(@)
         @stage.addChild(sobj.sprite)
 
     update : () ->
@@ -96,7 +104,7 @@ class Game
         console.log("starting up AQUATOR..")
         document.onkeydown = @keyDownHandler
         document.onkeyup = @keyUpHandler
-        @stage = new PIXI.Stage(0x031300);
+        @stage = new PIXI.Stage(0x0E111E);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
         @createSprite(new PlayerShip())
