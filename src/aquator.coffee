@@ -8,6 +8,7 @@ class StandardShot extends GameObject
           y: y
 
     initialize : (game) ->
+        @
 
     update : (game) ->
         @sprite.position.x += 15
@@ -15,6 +16,22 @@ class StandardShot extends GameObject
             game.createEvent(
                 new RemoveSpriteEvent(game.repository, @)
             )
+
+class Background extends GameObject
+    constructor: () ->
+        @type = "background"
+        @assets = [ { asset:"background", x:0, y:0 } ]
+        @sprites = {}
+    
+    initialize : (game) ->
+        # for now, just initialize background with canvas size
+        @
+
+    update : (game) ->
+        @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
+        @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
+        @
+
 
 class PlayerShip extends GameObject
     constructor: () ->
@@ -38,7 +55,7 @@ class PlayerShip extends GameObject
         @sprite.position.y = Tools.clampValue(@sprite.position.y+movement.y,0,game.canvas.height-@sprite.height)
         # fire shots with space bar
         if game.keys[32]==1
-            game.createSprite(new StandardShot(@sprite.position.x+22,@sprite.position.y+5))
+            game.createSprite(new StandardShot(@sprite.position.x+42,@sprite.position.y+20))
         @
 
 
@@ -56,7 +73,10 @@ class Game
                 missile : { file: "missile.png" },
                 enemy :   { file: "enemy.png" },
                 explosion : { file: "plop.png" },
-                clip1 :   { file: "gfx/test{0}.png", startframe:0, endframe:30 }
+                background : { file: "background.png"}
+                bg1 : { file: "bg_1.png"}
+                bg2 : { file: "bg_2.png"}
+                bg3 : { file: "bg_3.png"}
             datadir:
                 'res/sprites/'
         )
@@ -72,9 +92,22 @@ class Game
             sobj.sprite.position.x = sobj.position.x
             sobj.sprite.position.y = sobj.position.y
         @repository.createGObject(sobj)
-        if sobj.initialize
-            sobj.initialize(@)
         @stage.addChild(sobj.sprite)
+        sobj.initialize(@) if sobj.initialize
+
+    createComposedSprite : (sobj) ->
+        sobj.container = new PIXI.DisplayObjectContainer();
+        sobj.sprites = {}
+        for asset in sobj.assets   
+           tex = @assets.textures[asset.asset]
+           sprite = new PIXI.Sprite(tex)
+           sprite.position.x = asset.x
+           sprite.position.y = asset.y
+           sobj.sprites[asset.asset] = sprite
+           sobj.container.addChild(sprite)
+        @repository.createGObject(sobj)
+        @stage.addChild(sobj.container)
+        sobj.initialize(@) if sobj.initialize
 
     update : () ->
         # global update function
@@ -107,6 +140,7 @@ class Game
         @stage = new PIXI.Stage(0x0E111E);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
+        @createComposedSprite(new Background())
         @createSprite(new PlayerShip())
         @mainLoop()
         @
