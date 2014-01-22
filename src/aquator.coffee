@@ -30,23 +30,37 @@ class Background extends GameObject
         @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["backgrounddm"]);
         @displacementFilter.scale.x = 30
         @displacementFilter.scale.y = 30
-        @container.filters = [@displacementFilter]
+
+        @lightFilter = new PIXI.UnderwaterLightFilter(game.assets.textures["light"])
+        @
+
+        @container.filters = [@displacementFilter,@lightFilter]
         @count = 0
         @
 
     update : (game) ->
+        # water effect
         @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
         @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
         @displacementFilter.offset.x = @count
         @displacementFilter.offset.y = @count
         @count++
+
+        # light (dependent from ship position)
+        ship = game.repository.getNamedGObject("TheShip")
+        @lightFilter.offset.x = -(ship.sprite.position.x/game.canvas.width)
+        @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.75
+        @lightFilter.scale.x = 2
+        @lightFilter.scale.y = 2
+
         @
 
 
 class PlayerShip extends GameObject
     constructor: () ->
         @type = "sprite"
-        @asset ="ship"
+        @asset = "ship"
+        @name  = "TheShip"
 
     initialize : (game) ->
         @sprite.scale.x = 0.25
@@ -88,6 +102,7 @@ class Game
                 bg1 : { file: "bg_1.png"}
                 bg2 : { file: "bg_2.png"}
                 bg3 : { file: "bg_3.png"}
+                light: { file: "light.png"}
             datadir:
                 'res/sprites/'
         )

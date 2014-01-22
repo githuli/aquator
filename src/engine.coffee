@@ -102,18 +102,26 @@ class GameObjectRepository
     # the storage contains an array for each type of game object
     constructor : ->
         @storage = {}
+        @namedObjects = {}
 
     # every GameObject has to supply a member named 'type'
     createGObject : (gobj) ->
         if !@storage.hasOwnProperty(gobj.type)
             @storage[gobj.type]=[]
         @storage[gobj.type].push(gobj)
+        if gobj.hasOwnProperty('name')
+            @namedObjects[gobj.name] = gobj
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)
             index = @storage[gobj.type].indexOf(gobj)
             if (index > -1)
                 @storage[gobj.type].splice(index, 1)
+        if gobj.hasOwnProperty('name')
+            @namedObjects[gobj.name] = undefined
+
+    getNamedGObject : (name) ->
+        @namedObjects[name]
 
     getGObjects : (type) ->
         @storage[type]
