@@ -49,22 +49,8 @@ PIXI.UnderwaterLightFilter = function(texture)
         '    vec4 col   = texture2D(uSampler, vec2(vTextureCoord.x, vTextureCoord.y));',
         '    vec2 lightTexCoord = clamp(vec2(vTextureCoord.x*scale.x+offset.x*scale.x, vTextureCoord.y*scale.y+offset.y*scale.y),vec2(0,0),vec2(1,1));',
         '    vec4 light = texture2D(lightMap, lightTexCoord);',
-        '    vec4 blue  = vec4(0,0,col.z/2.0,1.0);',
+        '    vec4 blue  = vec4(col.x/20.0,col.y/20.0,col.z/2.0,1.0);',
         '    gl_FragColor = mix(col,blue,1.0-light.r);',
-        // '   vec2 mapCords = vTextureCoord.xy;',
-        // //'   mapCords -= ;',
-        // '   mapCords += (dimensions.zw + offset)/ dimensions.xy ;',
-        // '   mapCords.y *= -1.0;',
-        // '   mapCords.y += 1.0;',
-        // '   vec2 matSample = texture2D(displacementMap, mapCords).xy;',
-        // '   matSample -= 0.5;',
-        // '   matSample *= scale;',
-        // '   matSample /= mapDimensions;',
-        // '   gl_FragColor = texture2D(uSampler, vec2(vTextureCoord.x + matSample.x, vTextureCoord.y + matSample.y));',
-        // '   gl_FragColor.rgb = mix( gl_FragColor.rgb, gl_FragColor.rgb, 1.0);',
-        // '   vec2 cord = vTextureCoord;',
-        //'   gl_FragColor =  texture2D(displacementMap, cord);',
-     //   '   gl_FragColor = gl_FragColor;',
         '}'
     ];
 };

@@ -23,6 +23,10 @@ class Background extends GameObject
         @assets = [ 
             { asset:"background", x:0, y:0 },
             { asset:"bg1", x:200, y:500, sx:0.3, sy:0.3 },
+            { asset:"bg2", x:410, y:470, sx:0.35, sy:0.35 },
+            { asset:"bg3", x:800, y:500, sx:0.3, sy:0.3 },
+            { asset:"bg1", x:630, y:530, sx:0.2, sy:0.2 },
+            { asset:"bg3", x:42, y:530, sx:0.25, sy:0.25 },
         ]
         @sprites = {}
     
@@ -49,9 +53,9 @@ class Background extends GameObject
         # light (dependent from ship position)
         ship = game.repository.getNamedGObject("TheShip")
         @lightFilter.offset.x = -(ship.sprite.position.x/game.canvas.width)
-        @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.75
-        @lightFilter.scale.x = 2
-        @lightFilter.scale.y = 2
+        @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.68
+        @lightFilter.scale.x = 1.5
+        @lightFilter.scale.y = 1.5
 
         @
 
