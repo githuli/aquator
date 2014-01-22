@@ -20,16 +20,26 @@ class StandardShot extends GameObject
 class Background extends GameObject
     constructor: () ->
         @type = "background"
-        @assets = [ { asset:"background", x:0, y:0 } ]
+        @assets = [ 
+            { asset:"background", x:0, y:0 },
+            { asset:"bg1", x:200, y:500, sx:0.3, sy:0.3 },
+        ]
         @sprites = {}
     
     initialize : (game) ->
-        # for now, just initialize background with canvas size
+        @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["backgrounddm"]);
+        @displacementFilter.scale.x = 30
+        @displacementFilter.scale.y = 30
+        @container.filters = [@displacementFilter]
+        @count = 0
         @
 
     update : (game) ->
         @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
         @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
+        @displacementFilter.offset.x = @count
+        @displacementFilter.offset.y = @count
+        @count++
         @
 
 
@@ -74,6 +84,7 @@ class Game
                 enemy :   { file: "enemy.png" },
                 explosion : { file: "plop.png" },
                 background : { file: "background.png"}
+                backgrounddm : { file: "displacementbg.png"}
                 bg1 : { file: "bg_1.png"}
                 bg2 : { file: "bg_2.png"}
                 bg3 : { file: "bg_3.png"}
@@ -101,8 +112,10 @@ class Game
         for asset in sobj.assets   
            tex = @assets.textures[asset.asset]
            sprite = new PIXI.Sprite(tex)
-           sprite.position.x = asset.x
-           sprite.position.y = asset.y
+           sprite.position.x = asset.x if asset.x
+           sprite.position.y = asset.y if asset.y
+           sprite.scale.x = asset.sx if asset.sx
+           sprite.scale.y = asset.sy if asset.sy 
            sobj.sprites[asset.asset] = sprite
            sobj.container.addChild(sprite)
         @repository.createGObject(sobj)
