@@ -1,4 +1,14 @@
-# 
+#
+# GameObjects have to define the following properties:
+# type: class of gameobjects this object is associated with
+#
+# the objects are created using the create[GObjectClass] method of the Game
+# class. So far two types are supported:
+#
+# createSprite -> will create a visible sprite that uses one texture
+# createComposedSprite -> will create an object that is composed of various sprites
+
+
 class StandardShot extends GameObject
     constructor: (x, y) ->
         @type = "sprite"
