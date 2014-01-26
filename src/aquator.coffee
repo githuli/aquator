@@ -7,7 +7,8 @@
 #
 # createSprite -> will create a visible sprite that uses one texture
 # createComposedSprite -> will create an object that is composed of various sprites
-
+#                      composed sprites are stored in an Pixi DisplayObjectContainer
+#                      and can therefore be associated with 
 
 class StandardShot extends GameObject
     constructor: (x, y) ->
@@ -75,22 +76,56 @@ class PlayerShip extends GameObject
         @type = "sprite"
         @asset = "ship"
         @name  = "TheShip"
+        @movement =
+            vx: 0.0
+            vy: 0.0
+            ax: 0.0
+            ay: 0.0
+            tx: 0.5    # configure thrust x here
+            ty: 0.5    # configure thrust y here
+            decay: 1.5
 
     initialize : (game) ->
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
 
     update : (game) ->
-        # ship movement is controlled by keyboard
-        movement = 
-            x: 0
-            y: 0
-        movement.x -= 4.0 if game.keys[37]==1
-        movement.y -= 4.0 if game.keys[38]==1
-        movement.x += 4.0 if game.keys[39]==1
-        movement.y += 4.0 if game.keys[40]==1
-        @sprite.position.x = Tools.clampValue(@sprite.position.x+movement.x,0,game.canvas.width-@sprite.width)
-        @sprite.position.y = Tools.clampValue(@sprite.position.y+movement.y,0,game.canvas.height-@sprite.height)
+
+        # ship movement is controlled by keyboard, update acceleration
+        if game.keys[37] == 1              # left
+            @movement.ax -= @movement.tx
+        if game.keys[39] == 1              # right
+            @movement.ax += @movement.tx
+        if game.keys[37]==0 and game.keys[39]==0
+            @movement.ax /= @movement.decay # decay
+
+        if game.keys[38] == 1              # up
+            @movement.ay -= @movement.ty
+        if game.keys[40] == 1              # down
+            @movement.ay += @movement.ty
+        if game.keys[38]==0 and game.keys[40]==0
+            @movement.ay /= @movement.decay        # decay
+
+        if Math.abs(@movement.ax) < 0.1 
+            @movement.vx /= @movement.decay
+            @movement.ax = 0
+
+        if Math.abs(@movement.ay) < 0.1            
+            @movement.vy /= @movement.decay
+            @movement.ay = 0
+
+        @movement.ax = Tools.clampValue(@movement.ax, -3, 3)
+        @movement.ay = Tools.clampValue(@movement.ay, -3, 3)
+
+        # we assume that update is called for a timestep dt=1
+        @movement.vx = @movement.vx + @movement.ax
+        @movement.vy = @movement.vy + @movement.ay
+
+        @movement.vx = Tools.clampValue(@movement.vx, -5, 5)
+        @movement.vy = Tools.clampValue(@movement.vy, -5, 5)
+
+        @sprite.position.x = Tools.clampValue(@sprite.position.x+@movement.vx,0,game.canvas.width-@sprite.width)
+        @sprite.position.y = Tools.clampValue(@sprite.position.y+@movement.vy,0,game.canvas.height-@sprite.height)
         # fire shots with space bar
         if game.keys[32]==1
             game.createSprite(new StandardShot(@sprite.position.x+42,@sprite.position.y+20))
@@ -120,6 +155,13 @@ class Game
             datadir:
                 'res/sprites/'
         )
+
+        # initialize movement keys
+        @keys[37]=0
+        @keys[38]=0
+        @keys[39]=0
+        @keys[40]=0
+        @keys
 
     createEvent : (gevent) ->
         @eventhandler.createEvent(gevent)
