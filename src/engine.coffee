@@ -27,6 +27,8 @@ class Base
         # it will be called with initArgs
         if(@['init'])
             @init.apply(@, initArgs)
+        if (@['_init'])
+            @_init.apply(@)
 
 #------------------------------------------------------------------------------
 # 
@@ -72,7 +74,7 @@ PixiJSTools =
         new PIXI.Rectangle( sprite.position.x, sprite.position.y, sprite.width, sprite.height );
 
 #------------------------------------------------------------------------------
-# Collision Detection
+# Physics Engine & Collision Detection
 #
 CollisionDetection =
     overlapRect : (RectA, RectB) ->
@@ -101,34 +103,45 @@ class Vec2
         @y += vec.y
         @
 
-#------------------------------------------------------------------------------
-# Game Logic Engine
-#
-
-class GameObject extends Base
-    constructor: () ->
-        @type = 'none'
-
-    update : (game) ->
-        @
-
-    activate : (stage) ->
-        @
-
-    deactivate : (stage) ->
-        @
-
 class PhysicsObject
     constructor: () ->
         @pos = new Vec2()
         @velocity = new Vec2()
         @force = new Vec2()
         @invMass = 1.0
+        @friction = 0.0
 
     physicsTick : (dt=1.0) ->
+        # recalculate friction forces based on current movement
+        # f = @force # 
+        f = @force.add(@velocity.smul(-@friction))
+        #console.log("f: " + f)
         # Symplectic Euler
-        @velocity.add(@force.smul(@invMass).smul(dt))
+        @velocity.add(f.smul(@invMass).smul(dt))
         @pos.add(@velocity.smul(dt))
+
+#------------------------------------------------------------------------------
+# Game Logic Engine
+#
+# physics interface:
+# member: 
+#   physics {boolean} -> initialize a physics object
+#   [initialPosition]
+#   [initialForce]    
+#   [initialMass]
+#   [initialVelocity]
+
+class GameObject extends Base
+    constructor: () ->
+        @type = 'none'
+
+
+    updateGO : (game) ->
+        @phys.physicsTick() if @phys
+        @update(game)
+        @
+
+
 
 
 class GameObjectRepository
@@ -144,6 +157,12 @@ class GameObjectRepository
         @storage[gobj.type].push(gobj)
         if gobj.hasOwnProperty('name')
             @namedObjects[gobj.name] = gobj
+        if gobj.hasOwnProperty('physics')
+            gobj.phys = new PhysicsObject()
+            gobj.phys.pos = gobj.initialPosition if gobj.initialPosition
+            gobj.phys.velocity = gobj.initialVelocity if gobj.initialVelocity
+            gobj.phys.force = gobj.initialForce if gobj.initialForce
+            gobj.phys.invMass = 1.0/gobj.initialMass if gobj.initialMass
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)

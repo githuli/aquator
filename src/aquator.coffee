@@ -10,19 +10,28 @@
 #                      composed sprites are stored in an Pixi DisplayObjectContainer
 #                      and can therefore be associated with 
 
+# - Each GameObject has to define the following parameters
+# 'type'               - group of things this GameObject belongs to
+# - it can define the following methods
+# 'initialize(game)'   - initialization callback
+# 'update()'           - internal update method
+
+
 class StandardShot extends GameObject
-    constructor: (x, y) ->
+    constructor: (position, velocity) ->
         @type = "sprite"
         @asset = "missile"
-        @position = 
-          x: x
-          y: y
+        @physics = true
+        @initialPosition = position
+        @initialVelocity = velocity
 
     initialize : (game) ->
+        @update(game)
         @
 
     update : (game) ->
-        @sprite.position.x += 15
+        @sprite.position.x = @phys.pos.x
+        @sprite.position.y = @phys.pos.y
         if @sprite.position.x > game.canvas.width
             game.createEvent(
                 new RemoveSpriteEvent(game.repository, @)
@@ -76,19 +85,12 @@ class PlayerShip extends GameObject
         @type = "sprite"
         @asset = "ship"
         @name  = "TheShip"
-        # @movement =
-        #     vx: 0.0
-        #     vy: 0.0
-        #     ax: 0.0
-        #     ay: 0.0
-        #     tx: 0.5    # configure thrust x here
-        #     ty: 0.5    # configure thrust y here
-        #     decay: 1.5
-        @phys = new PhysicsObject()
+        @physics = true
 
     initialize : (game) ->
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
+        @phys.friction = 0.0
 
     update : (game) ->
 
@@ -100,7 +102,9 @@ class PlayerShip extends GameObject
         @phys.force.y -= 1 if game.keys[38] == 1              # up
         @phys.force.y += 1 if game.keys[40] == 1              # down
 
-        @phys.physicsTick()
+        # clamp position
+        @phys.pos.x = Tools.clampValue(@phys.pos.x, 0, game.canvas.width-@sprite.width)
+        @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@sprite.height)
 
         @sprite.position.x = @phys.pos.x
         @sprite.position.y = @phys.pos.y
@@ -145,7 +149,7 @@ class PlayerShip extends GameObject
 
         # fire shots with space bar
         if game.keys[32]==1
-            game.createSprite(new StandardShot(@sprite.position.x+42,@sprite.position.y+20))
+            game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(10,0) ))
         @
 
 
@@ -214,7 +218,7 @@ class Game
         # global update function
         # update all game objects
         for gobj in @repository.getAllGobjects()
-            gobj.update(@)
+            gobj.updateGO(@)
 
         # process game events
         @eventhandler.update()
