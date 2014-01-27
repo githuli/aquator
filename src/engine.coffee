@@ -81,12 +81,32 @@ CollisionDetection =
     collideSprite : (A, B) ->
         CollisionDetection.overlapRect(PixiJSTools.getSpriteRect(A), PixiJSTools.getSpriteRect(B))
 
+class Vec2 
+    constructor : (_x=0.0, _y=0.0) ->
+        @x = _x
+        @y = _y
+        @
+
+    set : (x,y) ->
+        @x = x
+        @y = y
+
+    smul : (scalar) ->
+        @x *= scalar
+        @y *= scalar
+        @
+
+    add : (vec) ->
+        @x += vec.x
+        @y += vec.y
+        @
+
 #------------------------------------------------------------------------------
 # Game Logic Engine
 #
 
 class GameObject extends Base
-    @constructor: () ->
+    constructor: () ->
         @type = 'none'
 
     update : (game) ->
@@ -97,6 +117,19 @@ class GameObject extends Base
 
     deactivate : (stage) ->
         @
+
+class PhysicsObject
+    constructor: () ->
+        @pos = new Vec2()
+        @velocity = new Vec2()
+        @force = new Vec2()
+        @invMass = 1.0
+
+    physicsTick : (dt=1.0) ->
+        # Symplectic Euler
+        @velocity.add(@force.smul(@invMass).smul(dt))
+        @pos.add(@velocity.smul(dt))
+
 
 class GameObjectRepository
     # the storage contains an array for each type of game object

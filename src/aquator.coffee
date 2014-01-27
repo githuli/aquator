@@ -76,14 +76,15 @@ class PlayerShip extends GameObject
         @type = "sprite"
         @asset = "ship"
         @name  = "TheShip"
-        @movement =
-            vx: 0.0
-            vy: 0.0
-            ax: 0.0
-            ay: 0.0
-            tx: 0.5    # configure thrust x here
-            ty: 0.5    # configure thrust y here
-            decay: 1.5
+        # @movement =
+        #     vx: 0.0
+        #     vy: 0.0
+        #     ax: 0.0
+        #     ay: 0.0
+        #     tx: 0.5    # configure thrust x here
+        #     ty: 0.5    # configure thrust y here
+        #     decay: 1.5
+        @phys = new PhysicsObject()
 
     initialize : (game) ->
         @sprite.scale.x = 0.25
@@ -91,41 +92,57 @@ class PlayerShip extends GameObject
 
     update : (game) ->
 
-        # ship movement is controlled by keyboard, update acceleration
-        if game.keys[37] == 1              # left
-            @movement.ax -= @movement.tx
-        if game.keys[39] == 1              # right
-            @movement.ax += @movement.tx
-        if game.keys[37]==0 and game.keys[39]==0
-            @movement.ax /= @movement.decay # decay
+        @phys.force.set(0,0)
 
-        if game.keys[38] == 1              # up
-            @movement.ay -= @movement.ty
-        if game.keys[40] == 1              # down
-            @movement.ay += @movement.ty
-        if game.keys[38]==0 and game.keys[40]==0
-            @movement.ay /= @movement.decay        # decay
+        # update forces
+        @phys.force.x -= 1 if game.keys[37] == 1              # left
+        @phys.force.x += 1 if game.keys[39] == 1              # right
+        @phys.force.y -= 1 if game.keys[38] == 1              # up
+        @phys.force.y += 1 if game.keys[40] == 1              # down
 
-        if Math.abs(@movement.ax) < 0.1 
-            @movement.vx /= @movement.decay
-            @movement.ax = 0
+        @phys.physicsTick()
 
-        if Math.abs(@movement.ay) < 0.1            
-            @movement.vy /= @movement.decay
-            @movement.ay = 0
+        @sprite.position.x = @phys.pos.x
+        @sprite.position.y = @phys.pos.y
 
-        @movement.ax = Tools.clampValue(@movement.ax, -3, 3)
-        @movement.ay = Tools.clampValue(@movement.ay, -3, 3)
 
-        # we assume that update is called for a timestep dt=1
-        @movement.vx = @movement.vx + @movement.ax
-        @movement.vy = @movement.vy + @movement.ay
+        # # ship movement is controlled by keyboard, update acceleration
+        # if game.keys[37] == 1              # left
+        #     @movement.ax -= @movement.tx
+        # if game.keys[39] == 1              # right
+        #     @movement.ax += @movement.tx
+        # if game.keys[37]==0 and game.keys[39]==0
+        #     @movement.ax /= @movement.decay # decay
 
-        @movement.vx = Tools.clampValue(@movement.vx, -5, 5)
-        @movement.vy = Tools.clampValue(@movement.vy, -5, 5)
+        # if game.keys[38] == 1              # up
+        #     @movement.ay -= @movement.ty
+        # if game.keys[40] == 1              # down
+        #     @movement.ay += @movement.ty
+        # if game.keys[38]==0 and game.keys[40]==0
+        #     @movement.ay /= @movement.decay        # decay
 
-        @sprite.position.x = Tools.clampValue(@sprite.position.x+@movement.vx,0,game.canvas.width-@sprite.width)
-        @sprite.position.y = Tools.clampValue(@sprite.position.y+@movement.vy,0,game.canvas.height-@sprite.height)
+        # if Math.abs(@movement.ax) < 0.1 
+        #     @movement.vx /= @movement.decay
+        #     @movement.ax = 0
+
+        # if Math.abs(@movement.ay) < 0.1            
+        #     @movement.vy /= @movement.decay
+        #     @movement.ay = 0
+
+        # @movement.ax = Tools.clampValue(@movement.ax, -3, 3)
+        # @movement.ay = Tools.clampValue(@movement.ay, -3, 3)
+
+        # # we assume that update is called for a timestep dt=1
+        # @movement.vx = @movement.vx + @movement.ax
+        # @movement.vy = @movement.vy + @movement.ay
+
+        # @movement.vx = Tools.clampValue(@movement.vx, -5, 5)
+        # @movement.vy = Tools.clampValue(@movement.vy, -5, 5)
+
+        # @sprite.position.x = Tools.clampValue(@sprite.position.x+@movement.vx,0,game.canvas.width-@sprite.width)
+        # @sprite.position.y = Tools.clampValue(@sprite.position.y+@movement.vy,0,game.canvas.height-@sprite.height)
+
+
         # fire shots with space bar
         if game.keys[32]==1
             game.createSprite(new StandardShot(@sprite.position.x+42,@sprite.position.y+20))
