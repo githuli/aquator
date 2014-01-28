@@ -109,7 +109,46 @@ class Vec2
         new Vec2(@x*scalar,@y*scalar)
     addC : (vec) ->
         new Vec2(@x+vec.x,@y+vec.y)
+    toString : () ->
+        "["+@x+","+@y+"]"
 
+class BBox2
+    constructor : () ->
+        @min = new Vec2(+Infinity,+Infinity)
+        @max = new Vec2(-Infinity,-Infinity)
+        @
+    
+    valid : () ->
+        @min.x!=+Infinity or @max.y!=-Infinity
+
+    width : () ->
+        @max.x-@min.x
+    height : () ->
+        @max.y-@min.y
+
+    insertPoint : (vec) ->
+        @min.x = vec.x if vec.x<@min.x
+        @min.y = vec.y if vec.y<@min.y
+        @max.x = vec.x if vec.x>@max.x
+        @max.y = vec.y if vec.y>@max.y
+        @
+    # insert pixi rectangle
+    insertRect : (rect) ->
+        @min.x = rect.x if rect.x<@min.x
+        @min.y = rect.y if rect.y<@min.y
+        @max.x = (rect.x+rect.width) if (rect.x+rect.width)>@max.x
+        @max.y = (rect.y+rect.height) if (rect.y+rect.height)>@max.y    
+        @
+    # insert BBox2
+    insertBBox : (bbox) ->
+        @min.x = bbox.min.x if bbox.min.x<@min.x
+        @min.y = bbox.min.y if bbox.min.y<@min.y
+        @max.x = bbox.max.x if bbox.max.x>@max.x
+        @max.y = bbox.max.y if bbox.max.y>@max.y    
+        @
+    
+    toString : () ->
+        "min:" + @min + " max:" + @max
 
 class PhysicsObject
     constructor: () ->

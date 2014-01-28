@@ -37,37 +37,69 @@ class StandardShot extends GameObject
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
 class BackgroundLayer extends GameObject
+    # config consists of: assets=[ {x,y,sx,sy} ], useWobble=<bool>, useShiplight=<bool>
     constructor: (config) ->
+        @type = 'bglayer'
         @sprites = {}
         @[name] = method for name, method of config
     
     initialize : (game) ->
+        # update bbox
+        @bbox = new BBox2()
+        for a in @assets
+            @bbox.insertRect(new PIXI.Rectangle(a.x,a.y,a.w,a.h))
+        console.log("background bbox:" + @bbox)
+        
+        filters = []
+
         if @useWobble
-            @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["backgrounddm"]);
+            @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["wobble1"]);
             @displacementFilter.scale.x = 30
             @displacementFilter.scale.y = 30
+            filters.push(@displacementFilter)
+        if @useShiplight
             @lightFilter = new PIXI.UnderwaterLightFilter(game.assets.textures["light"])
-            @container.filters = [@displacementFilter,@lightFilter]
-            @count = 0
+            filters.push(@lightFilter)
+        @container.filters = filters if filters.length>0 
+        @count = 0
         @
 
     update : (game) ->
         if @useWobble
             # water effect
-            @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
-            @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
+            #@sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
+            #@sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
             @displacementFilter.offset.x = @count
             @displacementFilter.offset.y = @count
-            @count++
 
         # light (dependent from ship position)
-        ship = game.repository.getNamedGObject("TheShip")
-        @lightFilter.offset.x = -(ship.sprite.position.x/game.canvas.width)
-        @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.68
-        @lightFilter.scale.x = 1.5
-        @lightFilter.scale.y = 1.5
-
+        if @useShiplight
+            ship = game.repository.getNamedGObject("TheShip")
+            @lightFilter.offset.x = -(ship.sprite.position.x/game.canvas.width)
+            @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.68
+            @lightFilter.scale.x = 1.5
+            @lightFilter.scale.y = 1.5
+        @count++
         @
+
+class ParallaxScrollingBackground extends GameObject
+    constructor : (layers) ->
+        @type = 'background'
+        @layers = layers
+        @
+
+    initialize : (game) ->
+        @t = 0.0
+        @
+
+    update : (game) ->
+        # update background layers t=0.. links, t=1.0.. rechts
+        for l in @layers
+            # determine canvas position
+            offset = (l.bbox.width() - game.canvas.width) * @t
+            l.container.position.x = -offset
+
+        @t += 0.001 if @t<1.0
 
 
 class PlayerShip extends GameObject
@@ -115,18 +147,16 @@ class Game
         @eventhandler = new GameEventHandler()
         @assets = new AssetLibrary(
             sprites:
-                ship :    { file: "ship.png" },
-                missile : { file: "missile.png" },
-                enemy :   { file: "enemy.png" },
-                explosion : { file: "plop.png" },
-                background : { file: "background.png"}
-                backgrounddm : { file: "displacementbg.png"}
-                bg1 : { file: "bg_1.png"}
-                bg2 : { file: "bg_2.png"}
-                bg3 : { file: "bg_3.png"}
-                light: { file: "light.png"}
+                ship :    { file: "sprites/ship.png" },
+                missile : { file: "sprites/missile.png" },
+                enemy :   { file: "sprites/enemy.png" },
+                bg1 : { file: "bg/layer1.png"}
+                bg2 : { file: "bg/layer2.png"}
+                bg3 : { file: "bg/layer3.png"}
+                wobble1 : { file: "maps/displacementbg.png"}
+                light: { file: "maps/light.png"}
             datadir:
-                'res/sprites/'
+                'res/'
         )
 
         # initialize movement keys
@@ -149,6 +179,7 @@ class Game
         @repository.createGObject(sobj)
         @stage.addChild(sobj.sprite)
         sobj.initialize(@) if sobj.initialize
+        sobj
 
     createComposedSprite : (sobj) ->
         sobj.container = new PIXI.DisplayObjectContainer();
@@ -165,6 +196,12 @@ class Game
         @repository.createGObject(sobj)
         @stage.addChild(sobj.container)
         sobj.initialize(@) if sobj.initialize
+        sobj
+
+    createGObject: (gobj) ->
+        @repository.createGObject(gobj)
+        gobj.initialize(@) if gobj.initialize
+        gobj
 
     update : () ->
         # global update function
@@ -197,17 +234,18 @@ class Game
         @stage = new PIXI.Stage(0x0E111E);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
-        @createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"background", x:0, y:0 },
-                { asset:"bg1", x:200, y:500, sx:0.3, sy:0.3 },
-                { asset:"bg2", x:410, y:470, sx:0.35, sy:0.35 },
-                { asset:"bg3", x:800, y:500, sx:0.3, sy:0.3 },
-                { asset:"bg1", x:630, y:530, sx:0.2, sy:0.2 },
-                { asset:"bg3", x:42, y:530, sx:0.25, sy:0.25 } ],
-            useWobble : true,
-            useShiplight : true
+        layer1=@createComposedSprite(new BackgroundLayer(
+            assets : [   { asset:"bg3", x:0, y:0, w:2880, h:640 } ],
         ))
+        layer2=@createComposedSprite(new BackgroundLayer(
+            assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
+        ))
+        layer3=@createComposedSprite(new BackgroundLayer(
+            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
+        ))
+        background = @createGObject( new ParallaxScrollingBackground([layer1,layer2,layer3]) )
         @createSprite(new PlayerShip())
+        @renderer.render(@stage)
         @mainLoop()
         @
 
