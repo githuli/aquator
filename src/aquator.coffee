@@ -99,7 +99,7 @@ class ParallaxScrollingBackground extends GameObject
             offset = (l.bbox.width() - game.canvas.width) * @t
             l.container.position.x = -offset
 
-        @t += 0.001 if @t<1.0
+        @t += 0.0005 if @t<1.0
 
 
 class PlayerShip extends GameObject
@@ -231,7 +231,7 @@ class Game
         console.log("starting up AQUATOR..")
         document.onkeydown = @keyDownHandler
         document.onkeyup = @keyUpHandler
-        @stage = new PIXI.Stage(0x0E111E);
+        @stage = new PIXI.Stage(0x14184a);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
         layer1=@createComposedSprite(new BackgroundLayer(
