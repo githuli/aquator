@@ -36,38 +36,29 @@ class StandardShot extends GameObject
         if @sprite.position.x > game.canvas.width
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
-class Background extends GameObject
-    constructor: () ->
-        @type = "background"
-        @assets = [ 
-            { asset:"background", x:0, y:0 },
-            { asset:"bg1", x:200, y:500, sx:0.3, sy:0.3 },
-            { asset:"bg2", x:410, y:470, sx:0.35, sy:0.35 },
-            { asset:"bg3", x:800, y:500, sx:0.3, sy:0.3 },
-            { asset:"bg1", x:630, y:530, sx:0.2, sy:0.2 },
-            { asset:"bg3", x:42, y:530, sx:0.25, sy:0.25 },
-        ]
+class BackgroundLayer extends GameObject
+    constructor: (config) ->
         @sprites = {}
+        @[name] = method for name, method of config
     
     initialize : (game) ->
-        @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["backgrounddm"]);
-        @displacementFilter.scale.x = 30
-        @displacementFilter.scale.y = 30
-
-        @lightFilter = new PIXI.UnderwaterLightFilter(game.assets.textures["light"])
-        @
-
-        @container.filters = [@displacementFilter,@lightFilter]
-        @count = 0
+        if @useWobble
+            @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["backgrounddm"]);
+            @displacementFilter.scale.x = 30
+            @displacementFilter.scale.y = 30
+            @lightFilter = new PIXI.UnderwaterLightFilter(game.assets.textures["light"])
+            @container.filters = [@displacementFilter,@lightFilter]
+            @count = 0
         @
 
     update : (game) ->
-        # water effect
-        @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
-        @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
-        @displacementFilter.offset.x = @count
-        @displacementFilter.offset.y = @count
-        @count++
+        if @useWobble
+            # water effect
+            @sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
+            @sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
+            @displacementFilter.offset.x = @count
+            @displacementFilter.offset.y = @count
+            @count++
 
         # light (dependent from ship position)
         ship = game.repository.getNamedGObject("TheShip")
@@ -206,7 +197,16 @@ class Game
         @stage = new PIXI.Stage(0x0E111E);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
-        @createComposedSprite(new Background())
+        @createComposedSprite(new BackgroundLayer(
+            assets : [   { asset:"background", x:0, y:0 },
+                { asset:"bg1", x:200, y:500, sx:0.3, sy:0.3 },
+                { asset:"bg2", x:410, y:470, sx:0.35, sy:0.35 },
+                { asset:"bg3", x:800, y:500, sx:0.3, sy:0.3 },
+                { asset:"bg1", x:630, y:530, sx:0.2, sy:0.2 },
+                { asset:"bg3", x:42, y:530, sx:0.25, sy:0.25 } ],
+            useWobble : true,
+            useShiplight : true
+        ))
         @createSprite(new PlayerShip())
         @mainLoop()
         @
