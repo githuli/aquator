@@ -93,6 +93,7 @@ class Vec2
         @x = x
         @y = y
 
+    #inplace operations
     smul : (scalar) ->
         @x *= scalar
         @y *= scalar
@@ -102,6 +103,13 @@ class Vec2
         @x += vec.x
         @y += vec.y
         @
+
+    #const operations
+    smulC : (scalar) ->
+        new Vec2(@x*scalar,@y*scalar)
+    addC : (vec) ->
+        new Vec2(@x+vec.x,@y+vec.y)
+
 
 class PhysicsObject
     constructor: () ->
@@ -114,10 +122,10 @@ class PhysicsObject
     physicsTick : (dt=1.0) ->
         # recalculate friction forces based on current movement
         # f = @force # 
-        f = @force.add(@velocity.smul(-@friction))
+        f = @force.add(@velocity.smulC(-@friction))
         #console.log("f: " + f)
         # Symplectic Euler
-        @velocity.add(f.smul(@invMass).smul(dt))
+        @velocity.add(f.smulC(@invMass).smulC(dt))
         @pos.add(@velocity.smul(dt))
 
 #------------------------------------------------------------------------------
@@ -135,14 +143,10 @@ class GameObject extends Base
     constructor: () ->
         @type = 'none'
 
-
     updateGO : (game) ->
         @phys.physicsTick() if @phys
         @update(game)
         @
-
-
-
 
 class GameObjectRepository
     # the storage contains an array for each type of game object
