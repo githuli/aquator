@@ -236,6 +236,7 @@ class Game
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
         layer1=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg3", x:0, y:0, w:2880, h:640 } ],
+            useWobble : true,
         ))
         layer2=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
