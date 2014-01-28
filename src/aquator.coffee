@@ -27,6 +27,7 @@ class StandardShot extends GameObject
 
     initialize : (game) ->
         @update(game)
+        @phys.force = new Vec2(0.3,0.0) # apply 
         @
 
     update : (game) ->
@@ -109,7 +110,7 @@ class PlayerShip extends GameObject
 
         # fire shots with space bar
         if game.keys[32]==1
-            game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(10,0) ))
+            game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(5,0) ))
         @
 
 
