@@ -47,10 +47,10 @@ class PropulsionBubble extends GameObject
     initialize : (game) ->
         @phys.friction = 0
         @sprite.blendMode = PIXI.blendModes.ADD
-        @sprite.alpha = 0.6
+        @sprite.alpha = 1
 
     update : (game) ->
-        @sprite.alpha -= 0.01
+        @sprite.alpha -= 0.1
         if @sprite.alpha < 0
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
@@ -151,7 +151,7 @@ class PlayerShip extends GameObject
         --@bubblectr
         if @bubblectr < 0
             pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*5)
-            game.createSprite(new PropulsionBubble(pos, new Vec2(-1,0)))
+            game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
             @bubblectr = 1
         @count += 1
 
