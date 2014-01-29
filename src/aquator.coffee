@@ -45,7 +45,7 @@ class PropulsionBubble extends GameObject
         @initialVelocity = velocity
 
     initialize : (game) ->
-        @phys.friction = 1
+        @phys.friction = 0
         @sprite.blendMode = PIXI.blendModes.ADD
         @sprite.alpha = 1
 
