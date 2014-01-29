@@ -39,7 +39,7 @@ class StandardShot extends GameObject
 class PropulsionBubble extends GameObject
     constructor: (position, velocity) ->
         @type = "sprite"
-        @asset = "bubble"
+        @asset = "bubble2"
         @physics = true
         @initialPosition = position
         @initialVelocity = velocity
@@ -47,9 +47,7 @@ class PropulsionBubble extends GameObject
     initialize : (game) ->
         @phys.friction = 0
         @sprite.blendMode = PIXI.blendModes.ADD
-        @sprite.alpha = 1.0
-        @sprite.scale.x = 0.3
-        @sprite.scale.y = 0.3
+        @sprite.alpha = 0.6
 
     update : (game) ->
         @sprite.alpha -= 0.01
@@ -133,7 +131,8 @@ class PlayerShip extends GameObject
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
         @phys.friction = 0.1
-        @bubblectr = 5
+        @bubblectr = 1
+        @count = 0
 
     update : (game) ->
 
@@ -151,9 +150,10 @@ class PlayerShip extends GameObject
         # spawn bubble particles
         --@bubblectr
         if @bubblectr < 0
-            pos = new Vec2(@sprite.position.x-8, @sprite.position.y)
+            pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*5)
             game.createSprite(new PropulsionBubble(pos, new Vec2(-1,0)))
-            @bubblectr = 5
+            @bubblectr = 1
+        @count += 1
 
         # fire shots with space bar
         if game.keys[32]==1
@@ -173,6 +173,7 @@ class Game
             sprites:
                 ship :    { file: "sprites/ship.png" },
                 bubble: { file: "sprites/ship_tail.png"}
+                bubble2: { file: "sprites/bubble.png"}
                 missile : { file: "sprites/missile.png" },
                 enemy :   { file: "sprites/enemy.png" },
                 bg1 : { file: "bg/layer1.png"}
