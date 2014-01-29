@@ -185,6 +185,9 @@ class GameObject extends Base
     updateGO : (game) ->
         @phys.physicsTick() if @phys
         @update(game)
+        if @sprite and @phys
+            @sprite.position.x = @phys.pos.x
+            @sprite.position.y = @phys.pos.y
         @
 
 class GameObjectRepository
@@ -206,6 +209,9 @@ class GameObjectRepository
             gobj.phys.velocity = gobj.initialVelocity if gobj.initialVelocity
             gobj.phys.force = gobj.initialForce if gobj.initialForce
             gobj.phys.invMass = 1.0/gobj.initialMass if gobj.initialMass
+        if gobj.sprite and gobj.phys
+            gobj.sprite.position.x = gobj.phys.pos.x
+            gobj.sprite.position.y = gobj.phys.pos.y
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)

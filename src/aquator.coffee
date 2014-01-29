@@ -26,14 +26,34 @@ class StandardShot extends GameObject
         @initialVelocity = velocity
 
     initialize : (game) ->
-        @update(game)
         @phys.force = new Vec2(0.3,0.0) # apply 
+        @update(game)
         @
 
     update : (game) ->
         @sprite.position.x = @phys.pos.x
         @sprite.position.y = @phys.pos.y
         if @sprite.position.x > game.canvas.width
+            game.createEvent(new RemoveSpriteEvent(game.repository, @))
+
+class PropulsionBubble extends GameObject
+    constructor: (position, velocity) ->
+        @type = "sprite"
+        @asset = "bubble"
+        @physics = true
+        @initialPosition = position
+        @initialVelocity = velocity
+
+    initialize : (game) ->
+        @phys.friction = 0
+        @sprite.blendMode = PIXI.blendModes.ADD
+        @sprite.alpha = 1.0
+        @sprite.scale.x = 0.3
+        @sprite.scale.y = 0.3
+
+    update : (game) ->
+        @sprite.alpha -= 0.01
+        if @sprite.alpha < 0
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
 class BackgroundLayer extends GameObject
@@ -113,12 +133,12 @@ class PlayerShip extends GameObject
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
         @phys.friction = 0.1
+        @bubblectr = 5
 
     update : (game) ->
 
         @phys.force.set(0,0)
-
-        # update forces
+        # update forces depending on controls
         @phys.force.x -= 1 if game.keys[37] == 1              # left
         @phys.force.x += 1 if game.keys[39] == 1              # right
         @phys.force.y -= 1 if game.keys[38] == 1              # up
@@ -128,8 +148,12 @@ class PlayerShip extends GameObject
         @phys.pos.x = Tools.clampValue(@phys.pos.x, 0, game.canvas.width-@sprite.width)
         @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@sprite.height)
 
-        @sprite.position.x = @phys.pos.x
-        @sprite.position.y = @phys.pos.y
+        # spawn bubble particles
+        --@bubblectr
+        if @bubblectr < 0
+            pos = new Vec2(@sprite.position.x-8, @sprite.position.y)
+            game.createSprite(new PropulsionBubble(pos, new Vec2(-1,0)))
+            @bubblectr = 5
 
         # fire shots with space bar
         if game.keys[32]==1
@@ -148,6 +172,7 @@ class Game
         @assets = new AssetLibrary(
             sprites:
                 ship :    { file: "sprites/ship.png" },
+                bubble: { file: "sprites/ship_tail.png"}
                 missile : { file: "sprites/missile.png" },
                 enemy :   { file: "sprites/enemy.png" },
                 bg1 : { file: "bg/layer1.png"}
