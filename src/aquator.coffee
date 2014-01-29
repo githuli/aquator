@@ -36,24 +36,6 @@ class StandardShot extends GameObject
         if @sprite.position.x > game.canvas.width
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
-class PropulsionBubble extends GameObject
-    constructor: (position, velocity) ->
-        @type = "sprite"
-        @asset = "bubble2"
-        @physics = true
-        @initialPosition = position
-        @initialVelocity = velocity
-
-    initialize : (game) ->
-        @phys.friction = 0
-        @sprite.blendMode = PIXI.blendModes.ADD
-        @sprite.alpha = 1
-
-    update : (game) ->
-        @sprite.alpha -= 0.1
-        if @sprite.alpha < 0
-            game.createEvent(new RemoveSpriteEvent(game.repository, @))
-
 class BackgroundLayer extends GameObject
     # config consists of: assets=[ {x,y,sx,sy} ], useWobble=<bool>, useShiplight=<bool>
     constructor: (config) ->
@@ -66,10 +48,7 @@ class BackgroundLayer extends GameObject
         @bbox = new BBox2()
         for a in @assets
             @bbox.insertRect(new PIXI.Rectangle(a.x,a.y,a.w,a.h))
-        console.log("background bbox:" + @bbox)
-        
         filters = []
-
         if @useWobble
             @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["wobble1"]);
             @displacementFilter.scale.x = 30
@@ -116,9 +95,52 @@ class ParallaxScrollingBackground extends GameObject
             # determine canvas position
             offset = (l.bbox.width() - game.canvas.width) * @t
             l.container.position.x = -offset
+        @t += 0.0001 if @t<1.0
 
-        @t += 0.0005 if @t<1.0
+class EnemyFish extends GameObject
+    constructor : (pos, vel) ->
+        @type = 'enemy'
+        @asset = 'fish{0}'
+        @startframe = 0
+        @endframe = 4
+        @physics = true
+        @initialPosition = pos
+        @initialVelocity = vel
 
+    initialize : (game) ->
+        @phys.friction = 0.1
+
+        @container.scale.x = 0.25
+        @container.scale.y = 0.25
+        @container.animationSpeed=0.25
+        @container.gotoAndPlay(0)
+        @
+
+    update : (game) ->
+        # make enemy move into player direction
+        ship = game.repository.getNamedGObject("TheShip")
+        @phys.force = ship.phys.pos.addC(@phys.pos.negC())
+        @phys.force.normalizeTo(0.1)
+
+        @
+
+class PropulsionBubble extends GameObject
+    constructor: (position, velocity) ->
+        @type = "sprite"
+        @asset = "bubble2"
+        @physics = true
+        @initialPosition = position
+        @initialVelocity = velocity
+
+    initialize : (game) ->
+        @phys.friction = 0
+        @sprite.blendMode = PIXI.blendModes.ADD
+        @sprite.alpha = 1
+
+    update : (game) ->
+        @sprite.alpha -= 0.1
+        if @sprite.alpha < 0
+            game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
 class PlayerShip extends GameObject
     constructor: () ->
@@ -135,7 +157,6 @@ class PlayerShip extends GameObject
         @count = 0
 
     update : (game) ->
-
         @phys.force.set(0,0)
         # update forces depending on controls
         @phys.force.x -= 1 if game.keys[37] == 1              # left
@@ -176,15 +197,16 @@ class Game
         @assets = new AssetLibrary(
             sprites:
                 ship :    { file: "sprites/ship.png" },
-                bubble: { file: "sprites/ship_tail.png"}
-                bubble2: { file: "sprites/bubble.png"}
+                bubble:   { file: "sprites/ship_tail.png"}
+                bubble2:  { file: "sprites/bubble.png"}
                 missile : { file: "sprites/missile.png" },
                 enemy :   { file: "sprites/enemy.png" },
-                bg1 : { file: "bg/layer1.png"}
-                bg2 : { file: "bg/layer2.png"}
-                bg3 : { file: "bg/layer3.png"}
+                bg1 :     { file: "bg/layer1.png"}
+                bg2 :     { file: "bg/layer2.png"}
+                bg3 :     { file: "bg/layer3.png"}
                 wobble1 : { file: "maps/displacementbg.png"}
-                light: { file: "maps/light.png"}
+                'light':    { file: "maps/light.png"}
+                'fish{0}': { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
             datadir:
                 'res/'
         )
@@ -212,6 +234,7 @@ class Game
         sobj
 
     createComposedSprite : (sobj) ->
+        # create multiple sprites in a display object container
         sobj.container = new PIXI.DisplayObjectContainer();
         sobj.sprites = {}
         for asset in sobj.assets   
@@ -227,6 +250,17 @@ class Game
         sobj.initialize(@) if sobj.initialize
         @stage.addChild(sobj.container)
         sobj
+
+    createAnimatedSprite : (sobj) ->
+        # create a sprite composed of multiple sprites
+        tex = []
+        for i in [sobj.startframe..sobj.endframe]
+            tex.push(@assets.textures[sobj.asset.format(i)])
+        sobj.container = new PIXI.MovieClip(tex)
+        @repository.createGObject(sobj)
+        sobj.initialize(@) if sobj.initialize
+        @stage.addChild(sobj.container)
+        @
 
     createGObject: (gobj) ->
         @repository.createGObject(gobj)
@@ -255,6 +289,9 @@ class Game
     mainLoop : () =>
         @update()
         @renderer.render(@stage)
+        ship = @repository.getNamedGObject("TheShip")
+        @stage.removeChild(ship.sprite)
+        @stage.addChild(ship.sprite)
         requestAnimFrame(@mainLoop)
 
     run : () =>
@@ -268,19 +305,20 @@ class Game
         layer1=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg3", x:0, y:0, w:2880, h:640 } ],
             useWobble : true,
-            useShiplight : false,
+            #useShiplight : false,
         ))
         layer2=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
             useWobble : true,
-            useShiplight : false,
+            #useShiplight : false,
         ))
         layer3=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
-            useShiplight : true,
+            #useShiplight : true,
         ))
         background = @createGObject( new ParallaxScrollingBackground([layer1,layer2,layer3]) )
         @createSprite(new PlayerShip())
+        @createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
         @renderer.render(@stage)
         @mainLoop()
         @

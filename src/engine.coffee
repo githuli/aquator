@@ -1,3 +1,9 @@
+
+String.prototype.format = ->
+  args = arguments
+  return this.replace /{(\d+)}/g, (match, number) ->
+    return if typeof args[number] isnt 'undefined' then args[number] else match
+
 #------------------------------------------------------------------------------
 # Base Class
 #
@@ -107,11 +113,22 @@ class Vec2
     length2 : () ->
         @x*@x+@y*@y
 
+    length : () ->
+        Math.sqrt(@length2())
+
+    normalizeTo : (length) ->
+        f = length/@length()
+        @x *= f
+        @y *= f
+        @
+
     #const operations
     smulC : (scalar) ->
         new Vec2(@x*scalar,@y*scalar)
     addC : (vec) ->
         new Vec2(@x+vec.x,@y+vec.y)
+    negC : () ->
+        new Vec2(-@x,-@y)
     toString : () ->
         "["+@x+","+@y+"]"
 
@@ -191,6 +208,9 @@ class GameObject extends Base
         if @sprite and @phys
             @sprite.position.x = @phys.pos.x
             @sprite.position.y = @phys.pos.y
+        if @container and @phys
+            @container.position.x = @phys.pos.x
+            @container.position.y = @phys.pos.y            
         @
 
 class GameObjectRepository
@@ -297,17 +317,33 @@ class AssetLibrary extends Base
     getAssetLoaderList : () ->
         assets = []
         for name, value of @sprites
-            assets.push(@datadir + value.file)
+            if value.hasOwnProperty('endframe')
+                endframe = value.endframe
+                startframe = 0
+                if value.hasOwnProperty('startframe')
+                    startframe = value.startframe
+                for i in [startframe..endframe]
+                    filename = (@datadir + value.file).format(i)
+                    assets.push(filename)
+            else
+                assets.push(@datadir + value.file)
         assets
 
     initializeAssets : () ->
         # load from files        
         for name, value of @sprites
             if value.hasOwnProperty('endframe')
-                # animated sprite
-                # TODO
+                endframe = value.endframe
+                startframe = 0
+                if value.hasOwnProperty('startframe')
+                    startframe = value.startframe
+                for i in [startframe..endframe]
+                    assetname = name.format(i)
+                    filename = (@datadir + value.file).format(i)
+                    if not @textures.hasOwnProperty(name) and value.hasOwnProperty('file')
+                        @textures[assetname] = PIXI.Texture.fromImage(filename)
             else
-                if !@textures.hasOwnProperty(name) and value.hasOwnProperty('file')
+                if not @textures.hasOwnProperty(name) and value.hasOwnProperty('file')
                     @textures[name] = PIXI.Texture.fromImage(@datadir + value.file)
 
     
