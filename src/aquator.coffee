@@ -224,8 +224,8 @@ class Game
            sobj.sprites[asset.asset] = sprite
            sobj.container.addChild(sprite)
         @repository.createGObject(sobj)
-        @stage.addChild(sobj.container)
         sobj.initialize(@) if sobj.initialize
+        @stage.addChild(sobj.container)
         sobj
 
     createGObject: (gobj) ->
@@ -268,13 +268,16 @@ class Game
         layer1=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg3", x:0, y:0, w:2880, h:640 } ],
             useWobble : true,
+            useShiplight : false,
         ))
         layer2=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
             useWobble : true,
+            useShiplight : false,
         ))
         layer3=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
+            useShiplight : true,
         ))
         background = @createGObject( new ParallaxScrollingBackground([layer1,layer2,layer3]) )
         @createSprite(new PlayerShip())
