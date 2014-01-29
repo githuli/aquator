@@ -148,7 +148,7 @@ class PlayerShip extends GameObject
         @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@sprite.height)
 
         # spawn bubble particles
-        bubbleoff= 0
+        bubbleoff= 1
         bubbleoff = 5 if @phys.force.length2() > 0
 
         pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*bubbleoff)
