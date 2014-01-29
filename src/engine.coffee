@@ -285,7 +285,13 @@ class AssetLibrary extends Base
         textures: {},
         useSpriteSheets: false
 
-    init : () ->
+    getAssetLoaderList : () ->
+        assets = []
+        for name, value of @sprites
+            assets.push(@datadir + value.file)
+        assets
+
+    initializeAssets : () ->
         # load from files        
         for name, value of @sprites
             if value.hasOwnProperty('endframe')

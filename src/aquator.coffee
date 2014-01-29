@@ -227,8 +227,9 @@ class Game
         @renderer.render(@stage)
         requestAnimFrame(@mainLoop)
 
-    start : () ->
-        console.log("starting up AQUATOR..")
+    run : () =>
+        # assets have been loaded
+        @assets.initializeAssets()
         document.onkeydown = @keyDownHandler
         document.onkeyup = @keyUpHandler
         @stage = new PIXI.Stage(0x14184a);
@@ -240,6 +241,7 @@ class Game
         ))
         layer2=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
+            useWobble : true,
         ))
         layer3=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
@@ -249,6 +251,14 @@ class Game
         @renderer.render(@stage)
         @mainLoop()
         @
+
+    start : () ->
+        console.log("starting up AQUATOR..")
+        # load assets
+        loader = new PIXI.AssetLoader(@assets.getAssetLoaderList());
+        loader.onComplete = @run
+        loader.load();
+
 
 window.Tools = Tools
 window.AquatorGame = new Game()
