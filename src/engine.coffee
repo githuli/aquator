@@ -104,6 +104,9 @@ class Vec2
         @y += vec.y
         @
 
+    length2 : () ->
+        @x*@x+@y*@y
+
     #const operations
     smulC : (scalar) ->
         new Vec2(@x*scalar,@y*scalar)

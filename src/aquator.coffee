@@ -45,7 +45,7 @@ class PropulsionBubble extends GameObject
         @initialVelocity = velocity
 
     initialize : (game) ->
-        @phys.friction = 0
+        @phys.friction = 1
         @sprite.blendMode = PIXI.blendModes.ADD
         @sprite.alpha = 1
 
@@ -131,7 +131,7 @@ class PlayerShip extends GameObject
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
         @phys.friction = 0.1
-        @bubblectr = 1
+        @shotctr = 2
         @count = 0
 
     update : (game) ->
@@ -148,15 +148,17 @@ class PlayerShip extends GameObject
         @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@sprite.height)
 
         # spawn bubble particles
-        --@bubblectr
-        if @bubblectr < 0
-            pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*5)
-            game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
-            @bubblectr = 1
+        bubbleoff= 0
+        bubbleoff = 5 if @phys.force.length2() > 0
+
+        pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*bubbleoff)
+        game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
         @count += 1
 
         # fire shots with space bar
         if game.keys[32]==1
+#            --@shotctr
+#            if @shotctr < 0
             game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(5,0) ))
         @
 
