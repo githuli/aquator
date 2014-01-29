@@ -131,7 +131,7 @@ class PlayerShip extends GameObject
         @sprite.scale.x = 0.25
         @sprite.scale.y = 0.25
         @phys.friction = 0.1
-        @shotctr = 2
+        @shotctr = 0
         @count = 0
 
     update : (game) ->
@@ -157,9 +157,11 @@ class PlayerShip extends GameObject
 
         # fire shots with space bar
         if game.keys[32]==1
-#            --@shotctr
-#            if @shotctr < 0
-            game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(5,0) ))
+            if @shotctr==0
+                game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(5,0) ))
+                ++@shotctr
+        else
+           @shotctr=0
         @
 
 
