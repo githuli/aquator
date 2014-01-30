@@ -5,7 +5,7 @@
 # the objects are created using the create[GObjectClass] method of the Game
 # class. So far two types are supported:
 #
-# createSprite -> will create a visible sprite that uses one texture
+# createSprite -> will create a visible container that uses one texture
 # createComposedSprite -> will create an object that is composed of various sprites
 #                      composed sprites are stored in an Pixi DisplayObjectContainer
 #                      and can therefore be associated with 
@@ -19,7 +19,7 @@
 
 class StandardShot extends GameObject
     constructor: (position, velocity) ->
-        @type = "sprite"
+        @type = "container"
         @asset = "missile"
         @physics = true
         @initialPosition = position
@@ -31,16 +31,16 @@ class StandardShot extends GameObject
         @
 
     update : (game) ->
-        @sprite.position.x = @phys.pos.x
-        @sprite.position.y = @phys.pos.y
-        if @sprite.position.x > game.canvas.width
+        @container.position.x = @phys.pos.x
+        @container.position.y = @phys.pos.y
+        if @container.position.x > game.canvas.width
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
 class BackgroundLayer extends GameObject
     # config consists of: assets=[ {x,y,sx,sy} ], useWobble=<bool>, useShiplight=<bool>
     constructor: (config) ->
         @type = 'bglayer'
-        @sprites = {}
+        @containers = {}
         @[name] = method for name, method of config
     
     initialize : (game) ->
@@ -64,16 +64,16 @@ class BackgroundLayer extends GameObject
     update : (game) ->
         if @useWobble
             # water effect
-            #@sprites.background.scale.x = game.canvas.width / @sprites.background.texture.width
-            #@sprites.background.scale.y = game.canvas.height / @sprites.background.texture.height
+            #@containers.background.scale.x = game.canvas.width / @containers.background.texture.width
+            #@containers.background.scale.y = game.canvas.height / @containers.background.texture.height
             @displacementFilter.offset.x = @count
             @displacementFilter.offset.y = @count
 
         # light (dependent from ship position)
         if @useShiplight
             ship = game.repository.getNamedGObject("TheShip")
-            @lightFilter.offset.x = -(ship.sprite.position.x/game.canvas.width)
-            @lightFilter.offset.y = +(ship.sprite.position.y)/(game.canvas.height)-0.68
+            @lightFilter.offset.x = -(ship.container.position.x/game.canvas.width)
+            @lightFilter.offset.y = +(ship.container.position.y)/(game.canvas.height)-0.68
             @lightFilter.scale.x = 1.5
             @lightFilter.scale.y = 1.5
         @count++
@@ -109,7 +109,8 @@ class EnemyFish extends GameObject
 
     initialize : (game) ->
         @phys.friction = 0.1
-
+        @container.anchor.x = 0.5
+        @container.anchor.y = 0.5
         @container.scale.x = 0.25
         @container.scale.y = 0.25
         @container.animationSpeed=0.25
@@ -122,11 +123,16 @@ class EnemyFish extends GameObject
         @phys.force = ship.phys.pos.addC(@phys.pos.negC())
         @phys.force.normalizeTo(0.1)
 
+        if @phys.velocity.x<0
+            @container.scale.x = 0.25
+        else
+            @container.scale.x = -0.25
+
         @
 
 class PropulsionBubble extends GameObject
     constructor: (position, velocity) ->
-        @type = "sprite"
+        @type = "container"
         @asset = "bubble2"
         @physics = true
         @initialPosition = position
@@ -134,24 +140,26 @@ class PropulsionBubble extends GameObject
 
     initialize : (game) ->
         @phys.friction = 0
-        @sprite.blendMode = PIXI.blendModes.ADD
-        @sprite.alpha = 1
+        @container.blendMode = PIXI.blendModes.ADD
+        @container.alpha = 1
 
     update : (game) ->
-        @sprite.alpha -= 0.1
-        if @sprite.alpha < 0
+        @container.alpha -= 0.1
+        if @container.alpha < 0
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
 class PlayerShip extends GameObject
     constructor: () ->
-        @type = "sprite"
+        @type = "container"
         @asset = "ship"
         @name  = "TheShip"
         @physics = true
 
     initialize : (game) ->
-        @sprite.scale.x = 0.25
-        @sprite.scale.y = 0.25
+        @container.anchor.x = 0.5
+        @container.anchor.y = 0.5
+        @container.scale.x = 0.25
+        @container.scale.y = 0.25
         @phys.friction = 0.1
         @shotctr = 0
         @count = 0
@@ -165,21 +173,21 @@ class PlayerShip extends GameObject
         @phys.force.y += 1 if game.keys[40] == 1              # down
 
         # clamp position
-        @phys.pos.x = Tools.clampValue(@phys.pos.x, 0, game.canvas.width-@sprite.width)
-        @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@sprite.height)
+        @phys.pos.x = Tools.clampValue(@phys.pos.x, 0, game.canvas.width-@container.width)
+        @phys.pos.y = Tools.clampValue(@phys.pos.y, 0, game.canvas.height-@container.height)
 
         # spawn bubble particles
         bubbleoff= 1
         bubbleoff = 5 if @phys.force.length2() > 0
 
-        pos = new Vec2(@sprite.position.x-8, @sprite.position.y+5+Math.sin(@count)*bubbleoff)
-        game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
+        pos = new Vec2(@container.position.x-28, @container.position.y-9+Math.sin(@count)*bubbleoff)
+        game.createSprite(new PropulsionBubble(pos, new Vec2(-2,0)))
         @count += 1
 
         # fire shots with space bar
         if game.keys[32]==1
             if @shotctr==0
-                game.createSprite(new StandardShot(new Vec2(@sprite.position.x+42,@sprite.position.y+20),new Vec2(5,0) ))
+                game.createSprite(new StandardShot(new Vec2(@container.position.x+42,@container.position.y+20),new Vec2(5,0) ))
                 ++@shotctr
         else
            @shotctr=0
@@ -198,7 +206,7 @@ class Game
             sprites:
                 ship :    { file: "sprites/ship.png" },
                 bubble:   { file: "sprites/ship_tail.png"}
-                bubble2:  { file: "sprites/bubble.png"}
+                bubble2:  { file: "sprites/bubble2.png"}
                 missile : { file: "sprites/missile.png" },
                 enemy :   { file: "sprites/enemy.png" },
                 bg1 :     { file: "bg/layer1.png"}
@@ -222,14 +230,14 @@ class Game
         @eventhandler.createEvent(gevent)
 
     createSprite : (sobj) ->
-        # create sprite with texture from asset library
+        # create container with texture from asset library
         texture = @assets.textures[sobj.asset]
-        sobj.sprite = new PIXI.Sprite(texture)
+        sobj.container = new PIXI.Sprite(texture)
         if sobj.hasOwnProperty('position')
-            sobj.sprite.position.x = sobj.position.x
-            sobj.sprite.position.y = sobj.position.y
+            sobj.container.position.x = sobj.position.x
+            sobj.container.position.y = sobj.position.y
         @repository.createGObject(sobj)
-        @stage.addChild(sobj.sprite)
+        @stage.addChild(sobj.container)
         sobj.initialize(@) if sobj.initialize
         sobj
 
@@ -239,20 +247,20 @@ class Game
         sobj.sprites = {}
         for asset in sobj.assets   
            tex = @assets.textures[asset.asset]
-           sprite = new PIXI.Sprite(tex)
-           sprite.position.x = asset.x if asset.x
-           sprite.position.y = asset.y if asset.y
-           sprite.scale.x = asset.sx if asset.sx
-           sprite.scale.y = asset.sy if asset.sy 
-           sobj.sprites[asset.asset] = sprite
-           sobj.container.addChild(sprite)
+           container = new PIXI.Sprite(tex)
+           container.position.x = asset.x if asset.x
+           container.position.y = asset.y if asset.y
+           container.scale.x = asset.sx if asset.sx
+           container.scale.y = asset.sy if asset.sy 
+           sobj.sprites[asset.asset] = container
+           sobj.container.addChild(container)
         @repository.createGObject(sobj)
         sobj.initialize(@) if sobj.initialize
         @stage.addChild(sobj.container)
         sobj
 
     createAnimatedSprite : (sobj) ->
-        # create a sprite composed of multiple sprites
+        # create a container composed of multiple sprites
         tex = []
         for i in [sobj.startframe..sobj.endframe]
             tex.push(@assets.textures[sobj.asset.format(i)])
@@ -288,10 +296,10 @@ class Game
 
     mainLoop : () =>
         @update()
-        @renderer.render(@stage)
         ship = @repository.getNamedGObject("TheShip")
-        @stage.removeChild(ship.sprite)
-        @stage.addChild(ship.sprite)
+        @stage.removeChild(ship.container)
+        @stage.addChild(ship.container)
+        @renderer.render(@stage)
         requestAnimFrame(@mainLoop)
 
     run : () =>
@@ -319,6 +327,10 @@ class Game
         background = @createGObject( new ParallaxScrollingBackground([layer1,layer2,layer3]) )
         @createSprite(new PlayerShip())
         @createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
+
+        for i in [1..10]
+            @createEvent(new GameEvent(i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
+
         @renderer.render(@stage)
         @mainLoop()
         @

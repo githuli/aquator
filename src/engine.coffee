@@ -205,9 +205,6 @@ class GameObject extends Base
     updateGO : (game) ->
         @phys.physicsTick() if @phys
         @update(game)
-        if @sprite and @phys
-            @sprite.position.x = @phys.pos.x
-            @sprite.position.y = @phys.pos.y
         if @container and @phys
             @container.position.x = @phys.pos.x
             @container.position.y = @phys.pos.y            
@@ -232,9 +229,9 @@ class GameObjectRepository
             gobj.phys.velocity = gobj.initialVelocity if gobj.initialVelocity
             gobj.phys.force = gobj.initialForce if gobj.initialForce
             gobj.phys.invMass = 1.0/gobj.initialMass if gobj.initialMass
-        if gobj.sprite and gobj.phys
-            gobj.sprite.position.x = gobj.phys.pos.x
-            gobj.sprite.position.y = gobj.phys.pos.y
+        if gobj.container and gobj.phys
+            gobj.container.position.x = gobj.phys.pos.x
+            gobj.container.position.y = gobj.phys.pos.y
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)
@@ -277,9 +274,14 @@ class GameEventHandler
 
 class GameEvent extends Base
 
-    constructor : () ->
-        @ctr = 0
+    constructor : (count, callback) ->
+        if count
+            @ctr = count
+        else 
+            @ctr = 0
         @type = 'void'
+        if callback
+            @execute = callback
 
     execute : () ->
         @
@@ -300,8 +302,8 @@ class RemoveSpriteEvent extends GameEvent
         @gob = gob
 
     execute : () ->
-        if @gob.sprite != null and @gob.sprite.parent != null
-            @gob.sprite.parent.removeChild(@gob.sprite)
+        if @gob.container != null and @gob.container.parent != null
+            @gob.container.parent.removeChild(@gob.container)
         @GOR.removeGObject(@gob)
 
 #------------------------------------------------------------------------------
