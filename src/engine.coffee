@@ -328,7 +328,8 @@ class AssetLibrary extends Base
                     filename = (@datadir + value.file).format(i)
                     assets.push(filename)
             else
-                assets.push(@datadir + value.file)
+                assets.push(@datadir + value.file) if value.hasOwnProperty('file')
+                assets.push(@datadir + value.font) if value.hasOwnProperty('font')
         assets
 
     initializeAssets : () ->

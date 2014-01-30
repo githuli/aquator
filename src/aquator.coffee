@@ -16,6 +16,44 @@
 # 'initialize(game)'   - initialization callback
 # 'update()'           - internal update method
 
+# text that fades in at a specific position, displays for a while and fades out
+class FadingText extends GameObject 
+    constructor: (position, text) ->
+        @type = "text"
+        @asset = { font: "20px Verdana", align: "center" }
+        @text = text
+        @pos = position
+        @fadetimer = 60
+        @displaytimer = 7*text.length
+
+    initialize : (game) ->
+        @container.alpha = 0.0
+        @container.position.x = @pos.x
+        @container.position.y = @pos.y
+        @count = @fadetimer
+        @state = 0             # 0: fadein, 1: display, 2:fadeout
+        @
+
+    update : (game) ->
+
+        --@count
+        switch @state
+            when 0     # fade in
+                if (@count<0)
+                    @state=1
+                    @count=@displaytimer
+                else
+                    @container.alpha = 1.0 - @count/@fadetimer
+            when 1
+                if (@count<0)
+                    @state=2
+                    @count=@fadetimer
+            when 2
+                if (@count<0)
+                    game.createEvent(new RemoveSpriteEvent(game.repository, @))
+                else
+                    @container.alpha = @count/@fadetimer
+
 
 class StandardShot extends GameObject
     constructor: (position, velocity) ->
@@ -160,11 +198,16 @@ class PlayerShip extends GameObject
         @container.anchor.y = 0.5
         @container.scale.x = 0.25
         @container.scale.y = 0.25
+        @container.alpha = 0       # fade in
+        @phys.pos.x = 100
+        @phys.pos.y = game.canvas.height/2
         @phys.friction = 0.1
         @shotctr = 0
         @count = 0
 
     update : (game) ->
+        @container.alpha += 0.05 if @container.alpha < 1.0
+
         @phys.force.set(0,0)
         # update forces depending on controls
         @phys.force.x -= 1 if game.keys[37] == 1              # left
@@ -187,7 +230,7 @@ class PlayerShip extends GameObject
         # fire shots with space bar
         if game.keys[32]==1
             if @shotctr==0
-                game.createSprite(new StandardShot(new Vec2(@container.position.x+42,@container.position.y+20),new Vec2(5,0) ))
+                game.createSprite(new StandardShot(new Vec2(@container.position.x+20,@container.position.y),new Vec2(5,0) ))
                 ++@shotctr
         else
            @shotctr=0
@@ -215,8 +258,8 @@ class Game
                 wobble1 : { file: "maps/displacementbg.png"}
                 'light':    { file: "maps/light.png"}
                 'fish{0}': { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
-            datadir:
-                'res/'
+                'verdana' : { font: "fonts/verdana.xml" }
+            datadir: 'res/'
         )
 
         # initialize movement keys
@@ -269,6 +312,13 @@ class Game
         sobj.initialize(@) if sobj.initialize
         @stage.addChild(sobj.container)
         @
+
+    createText : (tobj) ->
+        tobj.container = new PIXI.BitmapText(tobj.text, tobj.asset)
+        @repository.createGObject(tobj)
+        tobj.initialize(@) if tobj.initialize
+        @stage.addChild(tobj.container)
+        tobj
 
     createGObject: (gobj) ->
         @repository.createGObject(gobj)
@@ -328,8 +378,18 @@ class Game
         @createSprite(new PlayerShip())
         @createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
 
+        # randomly spawn some fishies
         for i in [1..10]
             @createEvent(new GameEvent(i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
+
+        @createEvent( new GameEvent(60, =>
+            @createText(new FadingText(new Vec2(300, 600), "Welcome to AQUATOR"))
+        ))
+
+
+        @createEvent( new GameEvent(500, =>
+            @createText(new FadingText(new Vec2(200, 600), "So Long, and Thanks For All the Fish"))
+        ))
 
         @renderer.render(@stage)
         @mainLoop()
