@@ -110,11 +110,9 @@ class Vec2
         @y += vec.y
         @
 
-    length2 : () ->
-        @x*@x+@y*@y
+    length2 : () ->       @x*@x+@y*@y
 
-    length : () ->
-        Math.sqrt(@length2())
+    length : () ->        Math.sqrt(@length2())
 
     normalizeTo : (length) ->
         f = length/@length()
@@ -123,14 +121,11 @@ class Vec2
         @
 
     #const operations
-    smulC : (scalar) ->
-        new Vec2(@x*scalar,@y*scalar)
-    addC : (vec) ->
-        new Vec2(@x+vec.x,@y+vec.y)
-    negC : () ->
-        new Vec2(-@x,-@y)
-    toString : () ->
-        "["+@x+","+@y+"]"
+    smulC : (scalar) ->        new Vec2(@x*scalar,@y*scalar)
+    addC : (vec) ->            new Vec2(@x+vec.x,@y+vec.y)
+    subC : (vec) ->            new Vec2(@x-vec.x,@y-vec.y)
+    negC : () ->               new Vec2(-@x,-@y)
+    toString : () ->           "["+@x+","+@y+"]"
 
 class BBox2
     constructor : () ->

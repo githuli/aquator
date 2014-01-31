@@ -137,7 +137,7 @@ class ParallaxScrollingBackground extends GameObject
 
 class EnemyFish extends GameObject
     constructor : (pos, vel) ->
-        @type = 'enemy'
+        @type = 'fish'
         @asset = 'fish{0}'
         @startframe = 0
         @endframe = 4
@@ -165,6 +165,13 @@ class EnemyFish extends GameObject
             @container.scale.x = 0.25
         else
             @container.scale.x = -0.25
+
+        # introduce a 'repelling' force between fishes
+        fishes = game.repository.getGObjects('fish')
+        for fish in fishes
+            if fish != @
+                f = @phys.pos.subC(fish.phys.pos)
+                @phys.force.add( f.smulC(0.5/f.length2()) )
 
         @
 
