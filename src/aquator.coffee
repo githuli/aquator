@@ -2,24 +2,30 @@
 # GameObjects have to define the following properties:
 # type: class of gameobjects this object is associated with
 #
-# the objects are created using the create[GObjectClass] method of the Game
-# class. So far two types are supported:
-#
-# createSprite -> will create a visible container that uses one texture
-# createComposedSprite -> will create an object that is composed of various sprites
-#                      composed sprites are stored in an Pixi DisplayObjectContainer
-#                      and can therefore be associated with 
+# the objects are created using the createGO method of the Game
+# class. 
 
+#
 # - Each GameObject has to define the following parameters
-# 'type'               - group of things this GameObject belongs to
-# - it can define the following methods
-# 'initialize(game)'   - initialization callback
+# 'type'       [string] - group of things this GameObject belongs to (internal name)
+# 'visualType' [string] - visual representation: 
+#                         "Sprite", "AnimatedSprite", "ComposedSprite", "Text"
+
+# - optional
+# 'physics'    [bool]   - if true, the engine maintains a physics state (position/velocity)
+#                         that is automatically applied to the visual representation
+
+# - it should define the following methods
+# 'initialize(game)'   - post initialization callback (sprites/physics have been instantiated)
 # 'update()'           - internal update method
+
+
 
 # text that fades in at a specific position, displays for a while and fades out
 class FadingText extends GameObject 
     constructor: (position, text) ->
         @type = "text"
+        @visualType = "Text"
         @asset = { font: "20px Verdana", align: "center" }
         @text = text
         @pos = position
@@ -55,6 +61,7 @@ class FadingText extends GameObject
                     @container.alpha = @count/@fadetimer
 
 
+# The "standard" shot, just a horizontally flying projectile
 class StandardShot extends GameObject
     constructor: (position, velocity) ->
         @type = "container"
@@ -64,7 +71,7 @@ class StandardShot extends GameObject
         @initialVelocity = velocity
 
     initialize : (game) ->
-        @phys.force = new Vec2(0.3,0.0) # apply 
+        @phys.force = new Vec2(0.3,0.0)    # standard shot is being accelerated
         @update(game)
         @
 
@@ -72,6 +79,7 @@ class StandardShot extends GameObject
         if @container.position.x > game.canvas.width
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
+# 
 class BackgroundLayer extends GameObject
     # config consists of: assets=[ {x,y,sx,sy} ], useWobble=<bool>, useShiplight=<bool>
     constructor: (config) ->
@@ -87,8 +95,8 @@ class BackgroundLayer extends GameObject
         filters = []
         if @useWobble
             @displacementFilter = new PIXI.DisplacementFilter(game.assets.textures["wobble1"]);
-            @displacementFilter.scale.x = 30
-            @displacementFilter.scale.y = 30
+            @displacementFilter.scale.x = 20
+            @displacementFilter.scale.y = 20
             filters.push(@displacementFilter)
         if @useShiplight
             @lightFilter = new PIXI.UnderwaterLightFilter(game.assets.textures["light"])
@@ -100,8 +108,6 @@ class BackgroundLayer extends GameObject
     update : (game) ->
         if @useWobble
             # water effect
-            #@containers.background.scale.x = game.canvas.width / @containers.background.texture.width
-            #@containers.background.scale.y = game.canvas.height / @containers.background.texture.height
             @displacementFilter.offset.x = @count
             @displacementFilter.offset.y = @count
 
@@ -112,7 +118,7 @@ class BackgroundLayer extends GameObject
             @lightFilter.offset.y = +(ship.container.position.y)/(game.canvas.height)-0.68
             @lightFilter.scale.x = 1.5
             @lightFilter.scale.y = 1.5
-        @count++
+        @count += 0.5
         @
 
 class ParallaxScrollingBackground extends GameObject
@@ -259,8 +265,8 @@ class Game
                 enemy :   { file: "sprites/enemy.png" },
                 bg1 :     { file: "bg/layer1.png"}
                 bg2 :     { file: "bg/layer2.png"}
-                bg3 :     { file: "bg/layer3.png"}
-                wobble1 : { file: "maps/displacementbg.png"}
+                'bg1-3' :     { file: "bg/bg1-3.png"}
+                'wobble1' : { file: "maps/displacementbg.png"}
                 'light':    { file: "maps/light.png"}
                 'fish{0}': { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
                 'verdana' : { font: "fonts/verdana.xml" }
@@ -366,20 +372,21 @@ class Game
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
         layer1=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg3", x:0, y:0, w:2880, h:640 } ],
+            assets : [   { asset:"bg1-3", x:0, y:0, w:2880, h:640 } ],
             useWobble : true,
             #useShiplight : false,
         ))
-        layer2=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
-            useWobble : true,
-            #useShiplight : false,
-        ))
-        layer3=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
-            #useShiplight : true,
-        ))
-        background = @createGObject( new ParallaxScrollingBackground([layer1,layer2,layer3]) )
+        # layer2=@createComposedSprite(new BackgroundLayer(
+        #     assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
+        #     useWobble : true,
+        #     #useShiplight : false,
+        # ))
+        #layer3=@createComposedSprite(new BackgroundLayer(
+        #    assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
+        #    #useShiplight : true,
+        #))
+        # [layer1,layer2,layer3]
+        background = @createGObject( new ParallaxScrollingBackground([layer1]) )
         @createSprite(new PlayerShip())
         @createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
 
