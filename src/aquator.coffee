@@ -69,8 +69,6 @@ class StandardShot extends GameObject
         @
 
     update : (game) ->
-        @container.position.x = @phys.pos.x
-        @container.position.y = @phys.pos.y
         if @container.position.x > game.canvas.width
             game.createEvent(new RemoveSpriteEvent(game.repository, @))
 
