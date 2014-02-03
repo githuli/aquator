@@ -202,7 +202,12 @@ class GameObject extends Base
         @update(game)
         if @container and @phys
             @container.position.x = @phys.pos.x
-            @container.position.y = @phys.pos.y            
+            @container.position.y = @phys.pos.y         
+        if @.hasOwnProperty('collideWith')
+            candidates = game.repository.getGObjects(@.collideWith)
+            for c in candidates
+                
+
         @
 
 class GameObjectRepository

@@ -64,11 +64,13 @@ class FadingText extends GameObject
 # The "standard" shot, just a horizontally flying projectile
 class StandardShot extends GameObject
     constructor: (position, velocity) ->
-        @type = "container"
+        @type = "shot"
         @asset = "missile"
         @physics = true
         @initialPosition = position
         @initialVelocity = velocity
+        @damage = 10
+        @destroyOnCollision = true
 
     initialize : (game) ->
         @phys.force = new Vec2(0.3,0.0)    # standard shot is being accelerated
@@ -148,6 +150,8 @@ class EnemyFish extends GameObject
         @physics = true
         @initialPosition = pos
         @initialVelocity = vel
+        @collideWith = 'shot'
+        @HP = 50
 
     initialize : (game) ->
         @phys.friction = 0.1
@@ -178,6 +182,13 @@ class EnemyFish extends GameObject
                 @phys.force.add( f.smulC(0.5/f.length2()) )
 
         @
+
+    collision : (game, collider) ->
+        @HP -= collider.damage
+        if (@HP < 0)
+            game.createEvent(new RemoveSpriteEvent(game.repository, @))
+        @
+
 
 class PropulsionBubble extends GameObject
     constructor: (position, velocity) ->
@@ -258,17 +269,17 @@ class Game
         @eventhandler = new GameEventHandler()
         @assets = new AssetLibrary(
             sprites:
-                ship :    { file: "sprites/ship.png" },
-                bubble:   { file: "sprites/ship_tail.png"}
-                bubble2:  { file: "sprites/bubble2.png"}
-                missile : { file: "sprites/missile.png" },
-                enemy :   { file: "sprites/enemy.png" },
-                bg1 :     { file: "bg/layer1.png"}
-                bg2 :     { file: "bg/layer2.png"}
-                'bg1-3' :     { file: "bg/bg1-3.png"}
+                'ship'    : { file: "sprites/ship.png" },
+                'bubble'  : { file: "sprites/ship_tail.png"}
+                'bubble2' : { file: "sprites/bubble2.png"}
+                'missile' : { file: "sprites/missile.png" },
+                'explosion1' : { file: "sprites/explosion1.png"}
+                'bg1'     : { file: "bg/layer1.png"}
+                'bg2'     : { file: "bg/layer2.png"}
+                'bg1-3'   : { file: "bg/bg1-3.png"}
                 'wobble1' : { file: "maps/displacementbg.png"}
-                'light':    { file: "maps/light.png"}
-                'fish{0}': { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
+                'light'   : { file: "maps/light.png"}
+                'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
                 'verdana' : { font: "fonts/verdana.xml" }
             datadir: 'res/'
         )
@@ -278,7 +289,7 @@ class Game
         @keys[38]=0
         @keys[39]=0
         @keys[40]=0
-        @keys
+        @
 
     createEvent : (gevent) ->
         @eventhandler.createEvent(gevent)
