@@ -56,7 +56,7 @@ class FadingText extends GameObject
                     @count=@fadetimer
             when 2
                 if (@count<0)
-                    game.createEvent(new RemoveSpriteEvent(game.repository, @))
+                    game.createEvent(new RemoveGOBEvent(game.repository, @))
                 else
                     @container.alpha = @count/@fadetimer
 
@@ -79,7 +79,7 @@ class StandardShot extends GameObject
 
     update : (game) ->
         if @container.position.x > game.canvas.width
-            game.createEvent(new RemoveSpriteEvent(game.repository, @))
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
 
 # 
 class BackgroundLayer extends GameObject
@@ -186,7 +186,12 @@ class EnemyFish extends GameObject
     collision : (game, collider) ->
         @HP -= collider.damage
         if (@HP < 0)
-            game.createEvent(new RemoveSpriteEvent(game.repository, @))
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+        # flash fish
+        @container.filters = [game.flashFilter]
+        game.createEvent( new GameEvent(10, =>
+                @container.filters = null
+        ))        
         @
 
 
@@ -200,13 +205,13 @@ class PropulsionBubble extends GameObject
 
     initialize : (game) ->
         @phys.friction = 0
-        @container.blendMode = PIXI.blendModes.ADD
+        @container.blendMode = PIXI.blendModes.SCREEN
         @container.alpha = 1
 
     update : (game) ->
         @container.alpha -= 0.1
         if @container.alpha < 0
-            game.createEvent(new RemoveSpriteEvent(game.repository, @))
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
 
 class PlayerShip extends GameObject
     constructor: () ->
@@ -283,6 +288,9 @@ class Game
                 'verdana' : { font: "fonts/verdana.xml" }
             datadir: 'res/'
         )
+
+        @flashFilter = new PIXI.ColorMatrixFilter()
+        @flashFilter.matrix =  [2.0,0,0,0,0,2.0,0,0,0,0,2.0,0,0,0,0,1]
 
         # initialize movement keys
         @keys[37]=0

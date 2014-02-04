@@ -77,14 +77,14 @@ CatmullRom =
 #
 PixiJSTools =
     getSpriteRect : (sprite) ->
-        new PIXI.Rectangle( sprite.position.x, sprite.position.y, sprite.width, sprite.height );
+        new PIXI.Rectangle( sprite.position.x-sprite.anchor.x*sprite.width, sprite.position.y-sprite.anchor.y*sprite.height, sprite.width, sprite.height );
 
 #------------------------------------------------------------------------------
 # Physics Engine & Collision Detection
 #
 CollisionDetection =
     overlapRect : (RectA, RectB) ->
-        (RectA.x < (RectB.x+RectB.width) && (RectA.x+RectA.width) > RectB.x && RectA.y < (RectB.y+RectB.height) &&         (RectA.y+RectA.height) >RectB.y) 
+        (RectA.x < (RectB.x+RectB.width) && (RectA.x+RectA.width) > RectB.x && RectA.y < (RectB.y+RectB.height) && (RectA.y+RectA.height)>RectB.y) 
 
     collideSprite : (A, B) ->
         CollisionDetection.overlapRect(PixiJSTools.getSpriteRect(A), PixiJSTools.getSpriteRect(B))
@@ -205,9 +205,13 @@ class GameObject extends Base
             @container.position.y = @phys.pos.y         
         if @.hasOwnProperty('collideWith')
             candidates = game.repository.getGObjects(@.collideWith)
-            for c in candidates
-                
-
+            if candidates
+                for c in candidates
+                    # for now, use bounding box of sprites for collision
+                    if CollisionDetection.collideSprite(@.container, c.container)
+                        @collision(game,c)
+                        if c.hasOwnProperty('destroyOnCollision')
+                             game.createEvent(new RemoveGOBEvent(game.repository, c))
         @
 
 class GameObjectRepository
@@ -293,7 +297,7 @@ class GameEvent extends Base
             return true
         return false
 
-class RemoveSpriteEvent extends GameEvent
+class RemoveGOBEvent extends GameEvent
 
     constructor : (GOR, gob) ->
         @ctr = 0
