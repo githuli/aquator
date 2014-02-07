@@ -204,11 +204,11 @@ class GameObject extends Base
             @container.position.x = @phys.pos.x
             @container.position.y = @phys.pos.y         
         if @.hasOwnProperty('collideWith')
-            candidates = game.repository.getGObjects(@.collideWith)
+            candidates = game.repository.getGObjects(@collideWith)
             if candidates
                 for c in candidates
                     # for now, use bounding box of sprites for collision
-                    if CollisionDetection.collideSprite(@.container, c.container)
+                    if CollisionDetection.collideSprite(@container, c.container)
                         @collision(game,c)
                         if c.hasOwnProperty('destroyOnCollision')
                              game.createEvent(new RemoveGOBEvent(game.repository, c))
@@ -306,7 +306,7 @@ class RemoveGOBEvent extends GameEvent
         @gob = gob
 
     execute : () ->
-        if @gob.container != null and @gob.container.parent != null
+        if @gob.container and @gob.container.parent
             @gob.container.parent.removeChild(@gob.container)
         @GOR.removeGObject(@gob)
 
