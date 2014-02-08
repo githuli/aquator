@@ -20,68 +20,33 @@
 # 'update()'           - internal update method
 
 
-
-# text that fades in at a specific position, displays for a while and fades out
-class FadingText extends GameObject 
-    constructor: (position, text) ->
-        @type = "text"
+# -----------------------------------------------------------------------------
+# Player Score
+class PlayerScore extends GameObject
+    constructor: (pos) ->
+        @type = 'score'
+        @name = 'score'
+        @score = 0
         @visualType = "Text"
-        @asset = { font: "20px Verdana", align: "center" }
-        @text = text
-        @pos = position
-        @fadetimer = 60
-        @displaytimer = 7*text.length
+        @asset = { font: "15px Verdana", align: "left" }
+        @pos = pos
 
-    initialize : (game) ->
-        @container.alpha = 0.0
-        @container.position.x = @pos.x
-        @container.position.y = @pos.y
-        @count = @fadetimer
-        @state = 0             # 0: fadein, 1: display, 2:fadeout
+    initialize: (game) ->
+        @addScore(0)
         @
 
-    update : (game) ->
-
-        --@count
-        switch @state
-            when 0     # fade in
-                if (@count<0)
-                    @state=1
-                    @count=@displaytimer
-                else
-                    @container.alpha = 1.0 - @count/@fadetimer
-            when 1
-                if (@count<0)
-                    @state=2
-                    @count=@fadetimer
-            when 2
-                if (@count<0)
-                    game.createEvent(new RemoveGOBEvent(game.repository, @))
-                else
-                    @container.alpha = @count/@fadetimer
-
-
-# The "standard" shot, just a horizontally flying projectile
-class StandardShot extends GameObject
-    constructor: (position, velocity) ->
-        @type = "shot"
-        @asset = "missile"
-        @physics = true
-        @initialPosition = position
-        @initialVelocity = velocity
-        @damage = 10
-        @destroyOnCollision = true
-
-    initialize : (game) ->
-        @phys.force = new Vec2(0.3,0.0)    # standard shot is being accelerated
-        @update(game)
+    update: (game) ->
         @
 
-    update : (game) ->
-        if @container.position.x > game.canvas.width
-            game.createEvent(new RemoveGOBEvent(game.repository, @))
+    addScore: (value) ->
+        @score += value
+        @text = "Score: " + @score
+        @container.setText(@text)
 
-# 
+
+# -----------------------------------------------------------------------------
+# Parallax scrolling background + effects 
+
 class BackgroundLayer extends GameObject
     # config consists of: assets=[ {x,y,sx,sy} ], useWobble=<bool>, useShiplight=<bool>
     constructor: (config) ->
@@ -141,6 +106,9 @@ class ParallaxScrollingBackground extends GameObject
             l.container.position.x = -offset
         @t += 0.0001 if @t<1.0
 
+# -----------------------------------------------------------------------------
+# ENEMIES
+
 class EnemyFish extends GameObject
     constructor : (pos, vel) ->
         @type = 'fish'
@@ -152,6 +120,7 @@ class EnemyFish extends GameObject
         @initialVelocity = vel
         @collideWith = 'shot'
         @HP = 50
+        @score = 1337
 
     initialize : (game) ->
         @phys.friction = 0.1
@@ -166,8 +135,9 @@ class EnemyFish extends GameObject
     update : (game) ->
         # make enemy move into player direction
         ship = game.repository.getNamedGObject("TheShip")
-        @phys.force = ship.phys.pos.addC(@phys.pos.negC())
-        @phys.force.normalizeTo(0.1)
+        if ship
+            @phys.force = ship.phys.pos.addC(@phys.pos.negC())
+            @phys.force.normalizeTo(0.1)
 
         if @phys.velocity.x<0
             @container.scale.x = 0.25
@@ -193,6 +163,29 @@ class EnemyFish extends GameObject
                 @container.filters = null
         ))        
         @
+
+# -----------------------------------------------------------------------------
+# PLAYER SHIP, WEAPONS AND PARTICLES
+
+# The "standard" shot, just a horizontally flying projectile
+class StandardShot extends GameObject
+    constructor: (position, velocity) ->
+        @type = "shot"
+        @asset = "missile"
+        @physics = true
+        @initialPosition = position
+        @initialVelocity = velocity
+        @damage = 10
+        @destroyOnCollision = true
+
+    initialize : (game) ->
+        @phys.force = new Vec2(0.3,0.0)    # standard shot is being accelerated
+        @update(game)
+        @
+
+    update : (game) ->
+        if @container.position.x > game.canvas.width
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
 
 
 class PropulsionBubble extends GameObject
@@ -286,6 +279,7 @@ class Game
                 'light'   : { file: "maps/light.png"}
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
                 'verdana' : { font: "fonts/verdana.xml" }
+                'getready' : { file: "fonts/getready.png" },
             datadir: 'res/'
         )
 
@@ -377,8 +371,9 @@ class Game
     mainLoop : () =>
         @update()
         ship = @repository.getNamedGObject("TheShip")
-        @stage.removeChild(ship.container)
-        @stage.addChild(ship.container)
+        if ship
+            @stage.removeChild(ship.container)
+            @stage.addChild(ship.container)
         @renderer.render(@stage)
         requestAnimFrame(@mainLoop)
 
@@ -390,6 +385,16 @@ class Game
         @stage = new PIXI.Stage(0x14184a);
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
+
+        @repository.removeGOBCB = (gobj) =>
+            # add this objects score to global score if it exists
+            if gobj.score
+                score = @repository.getNamedGObject('score')
+                if score
+                    score.addScore(gobj.score)
+
+        # initialize level
+
         layer1=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1-3", x:0, y:0, w:2880, h:640 } ],
             useWobble : true,
@@ -406,20 +411,27 @@ class Game
         #))
         # [layer1,layer2,layer3]
         background = @createGObject( new ParallaxScrollingBackground([layer1]) )
-        @createSprite(new PlayerShip())
-        @createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
+        
+        # initialize state per game objects
+        score = @createText(new PlayerScore(new Vec2(50,20)))
+
+        @createSprite(new BlinkingSprite(new Vec2(400,300), "getready", 3))
+        # spawn ship
+        @createEvent( new GameEvent(5*30, => @createSprite(new PlayerShip())))        
+
+        #@createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
 
         # randomly spawn some fishies
         for i in [1..10]
-            @createEvent(new GameEvent(i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
+            @createEvent(new GameEvent(500+i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
 
-        @createEvent( new GameEvent(60, =>
+        @createEvent( new GameEvent(200, =>
             @createText(new FadingText(new Vec2(300, 600), "Welcome to AQUATOR"))
         ))
 
 
         @createEvent( new GameEvent(500, =>
-            @createText(new FadingText(new Vec2(200, 600), "So Long, and Thanks For All the Fish"))
+            @createText(new FadingText(new Vec2(2000, 600), "So Long, and Thanks For All the Fish"))
         ))
 
         @renderer.render(@stage)

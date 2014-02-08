@@ -220,6 +220,10 @@ class GameObjectRepository
         @storage = {}
         @namedObjects = {}
 
+    # Callback for any GOB that gets removed - replace this for each game
+    removeGOBCB : (gobj) ->
+        @
+
     # every GameObject has to supply a member named 'type'
     createGObject : (gobj) ->
         if !@storage.hasOwnProperty(gobj.type)
@@ -236,6 +240,9 @@ class GameObjectRepository
         if gobj.container and gobj.phys
             gobj.container.position.x = gobj.phys.pos.x
             gobj.container.position.y = gobj.phys.pos.y
+        if gobj.container and gobj.pos
+            gobj.container.position.x = gobj.pos.x
+            gobj.container.position.y = gobj.pos.y
 
     removeGObject : (gobj) ->
         if @storage.hasOwnProperty(gobj.type)
@@ -244,6 +251,8 @@ class GameObjectRepository
                 @storage[gobj.type].splice(index, 1)
         if gobj.hasOwnProperty('name')
             @namedObjects[gobj.name] = undefined
+        # remove game object callback 
+        @removeGOBCB(gobj)
 
     getNamedGObject : (name) ->
         @namedObjects[name]
@@ -299,8 +308,8 @@ class GameEvent extends Base
 
 class RemoveGOBEvent extends GameEvent
 
-    constructor : (GOR, gob) ->
-        @ctr = 0
+    constructor : (GOR, gob, delay=0) ->
+        @ctr = delay
         @type = 'destroygobj'
         @GOR = GOR
         @gob = gob
@@ -354,3 +363,59 @@ class AssetLibrary extends Base
                     @textures[name] = PIXI.Texture.fromImage(@datadir + value.file)
 
     
+#------------------------------------------------------------------------------
+# Reusable Game objects
+
+# text that fades in at a specific position, displays for a while and fades out
+class FadingText extends GameObject 
+    constructor: (position, text) ->
+        @type = "text"
+        @visualType = "Text"
+        @asset = { font: "20px Verdana", align: "center" }
+        @text = text
+        @pos = position
+        @fadetimer = 60
+        @displaytimer = 7*text.length
+
+    initialize : (game) ->
+        @container.alpha = 0.0
+        @count = @fadetimer
+        @state = 0             # 0: fadein, 1: display, 2:fadeout
+        @
+
+    update : (game) ->
+        --@count
+        switch @state
+            when 0     # fade in
+                if (@count<0)
+                    @state=1
+                    @count=@displaytimer
+                else
+                    @container.alpha = 1.0 - @count/@fadetimer
+            when 1
+                if (@count<0)
+                    @state=2
+                    @count=@fadetimer
+            when 2
+                if (@count<0)
+                    game.createEvent(new RemoveGOBEvent(game.repository, @))
+                else
+                    @container.alpha = @count/@fadetimer
+
+# a "normal" sprite that blinks a given amount of times and then disappears
+class BlinkingSprite extends GameObject
+    constructor : (pos, asset="getready", count=3) ->
+        @type = "blink"
+        @asset = asset
+        @count = count
+        @pos = pos
+
+    initialize : (game) ->
+        for i in [0..(@count-1)]
+            game.createEvent(new GameEvent(i*30, => @container.alpha = 0.0 ))
+            game.createEvent(new GameEvent(i*30+15, => @container.alpha = 1.0 ))
+        game.createEvent(new RemoveGOBEvent(game.repository, @, @count*30))
+        @
+
+    update : (game) ->
+        @
