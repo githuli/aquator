@@ -21,7 +21,7 @@
 
 
 # -----------------------------------------------------------------------------
-# Player Score
+# Player Score & Energy
 class PlayerScore extends GameObject
     constructor: (pos) ->
         @type = 'score'
@@ -42,6 +42,32 @@ class PlayerScore extends GameObject
         @score += value
         @text = "Score: " + @score
         @container.setText(@text)
+
+# health bar is a composite sprite
+class PlayerHealthbar extends GameObject
+    constructor: (pos) ->
+        @type = 'energy'
+        @name = 'energy'
+        @assets = [ { asset:"hbarl", x:0, y:0 }, { asset:"hbarm", x:0, y:0 }, { asset:"hbarr", x:0, y:0 } ]
+        @energy = 0
+        @pos = pos
+
+    initialize: (game) ->
+        @offL = @sprites.hbarl.width
+        @sprites.hbarm.position.x = @offL
+        @addEnergy(100)
+        @container.alpha = 0.0
+        game.createEvent(new FadeInEvent(@))
+        @
+
+    update: (game) ->
+        @
+
+    addEnergy: (value) ->
+        @energy += value
+        @sprites.hbarm.scale.x = @energy
+        @sprites.hbarr.position.x = @offL+@energy
+        @
 
 
 # -----------------------------------------------------------------------------
@@ -111,7 +137,7 @@ class ParallaxScrollingBackground extends GameObject
 
 class EnemyFish extends GameObject
     constructor : (pos, vel) ->
-        @type = 'fish'
+        @type = 'enemy'
         @asset = 'fish{0}'
         @startframe = 0
         @endframe = 4
@@ -138,6 +164,8 @@ class EnemyFish extends GameObject
         if ship
             @phys.force = ship.phys.pos.addC(@phys.pos.negC())
             @phys.force.normalizeTo(0.1)
+        else
+            @phys.force.set(0,0)
 
         if @phys.velocity.x<0
             @container.scale.x = 0.25
@@ -145,18 +173,21 @@ class EnemyFish extends GameObject
             @container.scale.x = -0.25
 
         # introduce a 'repelling' force between fishes
-        fishes = game.repository.getGObjects('fish')
+        fishes = game.repository.getGObjects('enemy')
         for fish in fishes
             if fish != @
                 f = @phys.pos.subC(fish.phys.pos)
                 @phys.force.add( f.smulC(0.5/f.length2()) )
 
+        # see if we are dead
+        if (@HP < 0)
+            game.createEvent(new RemoveGOBEvent(game.repository, @))        
+            game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
         @
 
     collision : (game, collider) ->
         @HP -= collider.damage
-        if (@HP < 0)
-            game.createEvent(new RemoveGOBEvent(game.repository, @))
+
         # flash fish
         @container.filters = [game.flashFilter]
         game.createEvent( new GameEvent(10, =>
@@ -206,12 +237,39 @@ class PropulsionBubble extends GameObject
         if @container.alpha < 0
             game.createEvent(new RemoveGOBEvent(game.repository, @))
 
+class Explosion extends GameObject
+    constructor: (pos, size) ->
+        @type = 'explosion'
+        @asset = 'explosion1'
+        @pos = pos
+        @size = size
+        @count = 0
+    initialize: (game) ->
+        @container.scale.x = @size
+        @container.scale.y = @size
+        @container.anchor.x = 0.5
+        @container.anchor.y = 0.5
+        @dpFilter = new PIXI.DisplacementFilter(game.assets.textures["wobble1"]);
+        @dpFilter.scale.x = 10
+        @dpFilter.scale.y = 10
+        @dpFilter.offset.x = Math.random()
+        @dpFilter.offset.y = Math.random() 
+        @container.filters = [@dpFilter]
+    update: (game) ->
+        @count+=10
+        @dpFilter.offset.x = @count
+        @dpFilter.offset.y = @count
+        @container.alpha -= 0.02
+        if @container.apha < 0
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+
 class PlayerShip extends GameObject
     constructor: () ->
         @type = "container"
         @asset = "ship"
         @name  = "TheShip"
         @physics = true
+        @collideWith = 'enemy'
 
     initialize : (game) ->
         @container.anchor.x = 0.5
@@ -224,6 +282,13 @@ class PlayerShip extends GameObject
         @phys.friction = 0.1
         @shotctr = 0
         @count = 0
+        # create health bar
+        @energy = game.createComposedSprite(new PlayerHealthbar(new Vec2(150,game.canvas.height-30)))
+        @
+
+    collision : (game, collider) ->
+        @energy.addEnergy(-1)
+        @
 
     update : (game) ->
         @container.alpha += 0.05 if @container.alpha < 1.0
@@ -254,6 +319,14 @@ class PlayerShip extends GameObject
                 ++@shotctr
         else
            @shotctr=0
+
+        # see if we are dead
+        if @energy.energy < 0
+            # remove health bar and ship
+            game.createEvent(new RemoveGOBEvent(game.repository, @energy))
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+            # create explosion
+            game.createSprite(new Explosion(@phys.pos.dup(), 0.25))
         @
 
 
@@ -279,7 +352,10 @@ class Game
                 'light'   : { file: "maps/light.png"}
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
                 'verdana' : { font: "fonts/verdana.xml" }
-                'getready' : { file: "fonts/getready.png" },
+                'getready' : { file: "fonts/getready.png" }
+                'hbarl'   : { file: "ui/hbarl.gif" }
+                'hbarm'   : { file: "ui/hbarm.gif" }
+                'hbarr'   : { file: "ui/hbarr.gif" }
             datadir: 'res/'
         )
 
@@ -413,7 +489,7 @@ class Game
         background = @createGObject( new ParallaxScrollingBackground([layer1]) )
         
         # initialize state per game objects
-        score = @createText(new PlayerScore(new Vec2(50,20)))
+        score = @createText(new PlayerScore(new Vec2(20,@canvas.height-30)))
 
         @createSprite(new BlinkingSprite(new Vec2(400,300), "getready", 3))
         # spawn ship
@@ -425,10 +501,9 @@ class Game
         for i in [1..10]
             @createEvent(new GameEvent(500+i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
 
-        @createEvent( new GameEvent(200, =>
-            @createText(new FadingText(new Vec2(300, 600), "Welcome to AQUATOR"))
-        ))
-
+        #@createEvent( new GameEvent(200, =>
+        #    @createText(new FadingText(new Vec2(300, 600), "Welcome to AQUATOR"))
+        #))
 
         @createEvent( new GameEvent(500, =>
             @createText(new FadingText(new Vec2(2000, 600), "So Long, and Thanks For All the Fish"))

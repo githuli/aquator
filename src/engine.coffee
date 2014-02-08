@@ -77,7 +77,9 @@ CatmullRom =
 #
 PixiJSTools =
     getSpriteRect : (sprite) ->
-        new PIXI.Rectangle( sprite.position.x-sprite.anchor.x*sprite.width, sprite.position.y-sprite.anchor.y*sprite.height, sprite.width, sprite.height );
+        w = Math.abs(sprite.width)
+        h = Math.abs(sprite.height)
+        new PIXI.Rectangle( sprite.position.x-(sprite.anchor.x*w), sprite.position.y-(sprite.anchor.y*h), w, h );
 
 #------------------------------------------------------------------------------
 # Physics Engine & Collision Detection
@@ -87,7 +89,9 @@ CollisionDetection =
         (RectA.x < (RectB.x+RectB.width) && (RectA.x+RectA.width) > RectB.x && RectA.y < (RectB.y+RectB.height) && (RectA.y+RectA.height)>RectB.y) 
 
     collideSprite : (A, B) ->
-        CollisionDetection.overlapRect(PixiJSTools.getSpriteRect(A), PixiJSTools.getSpriteRect(B))
+        recta = PixiJSTools.getSpriteRect(A)
+        rectb = PixiJSTools.getSpriteRect(B)
+        CollisionDetection.overlapRect(recta, rectb)
 
 class Vec2 
     constructor : (_x=0.0, _y=0.0) ->
@@ -126,6 +130,7 @@ class Vec2
     subC : (vec) ->            new Vec2(@x-vec.x,@y-vec.y)
     negC : () ->               new Vec2(-@x,-@y)
     toString : () ->           "["+@x+","+@y+"]"
+    dup  : () ->               new Vec2(@x,@y)
 
 class BBox2
     constructor : () ->
@@ -194,8 +199,12 @@ class PhysicsObject
 #   [initialVelocity]
 
 class GameObject extends Base
-    constructor: () ->
+    constructor: (@defaults) ->
         @type = 'none'
+        @[name] = method for name, method of defaults
+
+    update : (game) ->
+        @
 
     updateGO : (game) ->
         @phys.physicsTick() if @phys
@@ -300,6 +309,7 @@ class GameEvent extends Base
         @
 
     update : () ->
+        @updateCB() if @updateCB
         @ctr--
         if (@ctr < 0)
             @execute()
@@ -318,6 +328,37 @@ class RemoveGOBEvent extends GameEvent
         if @gob.container and @gob.container.parent
             @gob.container.parent.removeChild(@gob.container)
         @GOR.removeGObject(@gob)
+
+class FadeInEvent extends GameEvent
+    constructor : (GOB, duration=30) ->
+        @duration = duration
+        @ctr = duration
+        @type = 'fadein'
+        @gob = GOB
+
+    updateCB : () ->
+        # fade alpha from 0->1
+        @gob.container.alpha = (@duration-@ctr)/@duration
+
+    execute : () ->
+        @gob.container.alpha = 1.0
+        @
+
+class FadeOutEvent extends GameEvent
+    constructor : (GOB, duration=30) ->
+        @duration = duration
+        @ctr = duration
+        @type = 'fadeout'
+        @gob = GOB
+
+    updateCB : () ->
+        # fade alpha from 0->1
+        @gob.container.alpha = @ctr/@duration
+
+    execute : () ->
+        @gob.container.alpha = 0.0
+        @
+
 
 #------------------------------------------------------------------------------
 # Asset Library
