@@ -181,7 +181,7 @@ class PhysicsObject
     physicsTick : (dt=1.0) ->
         # recalculate friction forces based on current movement
         # f = @force # 
-        f = @force.add(@velocity.smulC(-@friction))
+        f = @force.addC(@velocity.smulC(-@friction))
         #console.log("f: " + f)
         # Symplectic Euler
         @velocity.add(f.smulC(@invMass).smulC(dt))

@@ -146,7 +146,7 @@ class EnemyFish extends GameObject
         @initialVelocity = vel
         @collideWith = 'shot'
         @HP = 50
-        @score = 1337
+        @score = 100
 
     initialize : (game) ->
         @phys.friction = 0.1
@@ -194,6 +194,58 @@ class EnemyFish extends GameObject
                 @container.filters = null
         ))        
         @
+
+
+class EnemyShark extends GameObject
+    constructor : (pos, vel) ->
+        @type = 'enemy'
+        @asset = 'shark'
+        @physics = true
+        @initialPosition = pos
+        @initialVelocity = vel
+        @collideWith = 'shot'
+        @HP = 100
+        @score = 1337
+        @count = 150
+        @
+
+    initialize : (game) ->
+        @phys.friction = 0.03
+        @container.anchor.x = 0.5
+        @container.anchor.y = 0.5
+        @container.scale.x = 0.25
+        @container.scale.y = 0.25
+        @
+
+    update : (game) ->
+        --@count
+        if @count < 0
+            if Math.random() < 0.5
+                ship = game.repository.getNamedGObject("TheShip")
+                # move into player direction
+                if ship
+                    @phys.force = ship.phys.pos.addC(@phys.pos.negC())
+                    @phys.force.normalizeTo(0.5)
+            else
+               # move left
+               @phys.force.set(-0.3,0.0)
+            # stop force after 10 frames 
+            game.createEvent( new GameEvent(10, => @phys.force.set(0,0)) )
+            @count = 150
+        # see if we are dead
+        if (@HP < 0)
+            game.createEvent(new RemoveGOBEvent(game.repository, @))        
+            game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
+        @
+
+    collision : (game, collider) ->
+        @HP -= collider.damage
+        # flash fish
+        @container.filters = [game.flashFilter]
+        game.createEvent( new GameEvent(10, =>
+                @container.filters = null
+        ))        
+        @        
 
 # -----------------------------------------------------------------------------
 # PLAYER SHIP, WEAPONS AND PARTICLES
@@ -356,6 +408,7 @@ class Game
                 'hbarl'   : { file: "ui/hbarl.gif" }
                 'hbarm'   : { file: "ui/hbarm.gif" }
                 'hbarr'   : { file: "ui/hbarr.gif" }
+                'shark'   : { file: "sprites/shark.png" }
             datadir: 'res/'
         )
 
@@ -499,7 +552,8 @@ class Game
 
         # randomly spawn some fishies
         for i in [1..10]
-            @createEvent(new GameEvent(500+i*100, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
+            @createEvent(new GameEvent(150+i*200, => @createAnimatedSprite(new EnemyFish(new Vec2(Math.random()*960,Math.random()*640), new Vec2(0,0))) ))
+            @createEvent(new GameEvent(100+i*200, => @createSprite(new EnemyShark(new Vec2(960,Math.random()*640), new Vec2(0,0))) ))            
 
         #@createEvent( new GameEvent(200, =>
         #    @createText(new FadingText(new Vec2(300, 600), "Welcome to AQUATOR"))
