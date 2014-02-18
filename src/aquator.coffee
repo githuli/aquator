@@ -96,6 +96,17 @@ class BackgroundLayer extends GameObject
             filters.push(@lightFilter)
         @container.filters = filters if filters.length>0 
         @count = 0
+        # initialize distance field data
+        if @assets[0].dfield
+            img = game.assets.textures[@assets[0].dfield].baseTexture.source
+            canvas = document.createElement('canvas');
+            canvas.width = img.width
+            canvas.height = img.height
+            context = canvas.getContext('2d');
+            context.drawImage(img, 0, 0 );
+            @distanceMap = context.getImageData(0, 0, img.width, img.height);
+            context = undefined
+            canvas = undefined
         @
 
     update : (game) ->
@@ -112,6 +123,17 @@ class BackgroundLayer extends GameObject
             @lightFilter.scale.x = 1.5
             @lightFilter.scale.y = 1.5
         @count += 0.5
+
+        # Collision detection with player ship is handled here 
+        # (TODO: better integration in collision detection )
+        ship = game.repository.getNamedGObject("TheShip")
+        if ship and @distanceMap
+            # get ship position relative to background
+            spos = ship.phys.pos.subC(@container.position).roundC()
+            offset = (spos.x+spos.y*@distanceMap.width)*4
+            dist = @distanceMap.data[offset]
+            if dist < ship.collisionRadius
+                ship.collision(game, @)
         @
 
 class ParallaxScrollingBackground extends GameObject
@@ -329,11 +351,12 @@ class PlayerShip extends GameObject
         @container.scale.x = 0.25
         @container.scale.y = 0.25
         @container.alpha = 0       # fade in
-        @phys.pos.x = 100
+        @phys.pos.x = 200
         @phys.pos.y = game.canvas.height/2
         @phys.friction = 0.1
         @shotctr = 0
         @count = 0
+        @collisionRadius = (@container.width+@container.height)/4
         # create health bar
         @energy = game.createComposedSprite(new PlayerHealthbar(new Vec2(150,game.canvas.height-30)))
         @
@@ -398,6 +421,7 @@ class Game
                 'missile' : { file: "sprites/missile.png" },
                 'explosion1' : { file: "sprites/explosion1.png"}
                 'bg1'     : { file: "bg/layer1.png"}
+                'bg1dist' : { file: "bg/layer1-dist.png"}
                 'bg2'     : { file: "bg/layer2.png"}
                 'bg1-3'   : { file: "bg/bg1-3.png"}
                 'wobble1' : { file: "maps/displacementbg.png"}
@@ -534,12 +558,13 @@ class Game
         #     useWobble : true,
         #     #useShiplight : false,
         # ))
-        #layer3=@createComposedSprite(new BackgroundLayer(
-        #    assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640 } ],
-        #    #useShiplight : true,
-        #))
+        layer3=@createComposedSprite(new BackgroundLayer(
+            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
+            useCollision : true,
+            #useShiplight : true,
+        ))
         # [layer1,layer2,layer3]
-        background = @createGObject( new ParallaxScrollingBackground([layer1]) )
+        background = @createGObject( new ParallaxScrollingBackground([layer1,layer3]) )
         
         # initialize state per game objects
         score = @createText(new PlayerScore(new Vec2(20,@canvas.height-30)))

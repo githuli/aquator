@@ -131,6 +131,7 @@ class Vec2
     negC : () ->               new Vec2(-@x,-@y)
     toString : () ->           "["+@x+","+@y+"]"
     dup  : () ->               new Vec2(@x,@y)
+    roundC : () ->             new Vec2(Math.round(@x), Math.round(@y))
 
 class BBox2
     constructor : () ->
@@ -205,6 +206,7 @@ class GameObject extends Base
 
     update : (game) ->
         @
+
 
     updateGO : (game) ->
         @phys.physicsTick() if @phys
