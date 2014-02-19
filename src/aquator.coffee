@@ -237,6 +237,12 @@ class EnemyShark extends GameObject
         @container.anchor.y = 0.5
         @container.scale.x = 0.25
         @container.scale.y = 0.25
+        @wobble = new PIXI.WobbleFilter()
+        @wobble.scale.x = 12.0
+        @wobble.scale.y = 0.003
+        @container.filters = [ @wobble ]
+        @wobbleoff = new Vec2(0,0)
+        @wobbleinc = new Vec2(0.1,0.1)
         @
 
     update : (game) ->
@@ -247,13 +253,17 @@ class EnemyShark extends GameObject
                 # move into player direction
                 if ship
                     @phys.force = ship.phys.pos.addC(@phys.pos.negC())
-                    @phys.force.normalizeTo(0.5)
+                    @phys.force.normalizeTo(0.3)
             else
                # move left
                @phys.force.set(-0.3,0.0)
             # stop force after 10 frames 
-            game.createEvent( new GameEvent(10, => @phys.force.set(0,0)) )
+            game.createEvent( new GameEvent(13, => @phys.force.set(0,0)) )
             @count = 150
+
+        @container.filters[0].offset = @wobbleoff
+        @wobbleoff.add(@wobbleinc)
+
         # see if we are dead
         if (@HP < 0)
             game.createEvent(new RemoveGOBEvent(game.repository, @))        
@@ -263,10 +273,8 @@ class EnemyShark extends GameObject
     collision : (game, collider) ->
         @HP -= collider.damage
         # flash fish
-        @container.filters = [game.flashFilter]
-        game.createEvent( new GameEvent(10, =>
-                @container.filters = null
-        ))        
+        @container.filters = [ @wobble, game.flashFilter ]
+        game.createEvent( new GameEvent(10, => @container.filters = [ @wobble ] ) )
         @        
 
 # -----------------------------------------------------------------------------

@@ -110,3 +110,81 @@ Object.defineProperty(PIXI.UnderwaterLightFilter.prototype, 'offset', {
         this.uniforms.offset.value = value;
     }
 });
+
+
+
+/**
+ * A procedural wobble displacement filter, shamelessly ripped off the original
+ * Pixi displacement shader
+ * 
+ * @class WobbleFilter
+ * @contructor
+ * @param none
+ */
+PIXI.WobbleFilter = function()
+{
+    PIXI.AbstractFilter.call( this );
+
+    this.passes = [this];
+
+    // set the uniforms
+    this.uniforms = {
+        offset:          {type: '2f', value:{x:0, y:0}},
+        scale:           {type: '2f', value:{x:0, y:0}},
+    };
+
+    this.fragmentSrc = [
+        'precision mediump float;',
+        'varying vec2 vTextureCoord;',
+        'varying vec4 vColor;',
+        'uniform sampler2D uSampler;',
+        'uniform vec2 offset;',
+        'uniform vec2 scale;',
+
+        'void main(void) {',
+        '   vec2 mapCords; ', // = vTextureCoord.xy;',
+//        '   mapCords.x += sin(vTextureCoord.x*30*scale.x + offset.x)*0.01;',
+        '   mapCords.x = vTextureCoord.x+sin(vTextureCoord.x*20.0+offset.y)*0.002;',
+        '   mapCords.y = vTextureCoord.y+sin(vTextureCoord.x*6.28318530718*scale.x + offset.x)*abs(0.5-vTextureCoord.y*scale.x)*scale.y;',
+        '   gl_FragColor = texture2D(uSampler, mapCords);',
+    //    '   gl_FragColor = vec4(gl_PointCoord.x,gl_PointCoord.y,0.0,1.0);',
+    //    '   gl_FragColor = vec4(vTextureCoord.x,vTextureCoord.y,1.0,1.0);',
+    //    '   vec2 cord = vTextureCoord;',
+    //'   gl_FragColor =  texture2D(displacementMap, cord);',
+    //   '   gl_FragColor = gl_FragColor;',
+        '}'
+    ];
+};
+
+PIXI.WobbleFilter.prototype = Object.create( PIXI.AbstractFilter.prototype );
+PIXI.WobbleFilter.prototype.constructor = PIXI.WobbleFilter;
+
+/**
+ * The offset is used for animating the procedural displacement
+ *
+ * @property offset
+ * @type float
+ */
+Object.defineProperty(PIXI.WobbleFilter.prototype, 'offset', {
+    get: function() {
+        return this.uniforms.offset.value;
+    },
+    set: function(value) {
+        this.uniforms.offset.value = value;
+    }
+});
+
+/**
+ * The multiplier used to scale the displacement
+ *
+ * @property scale
+ * @type Point
+ */
+Object.defineProperty(PIXI.WobbleFilter.prototype, 'scale', {
+    get: function() {
+        return this.uniforms.scale.value;
+    },
+    set: function(value) {
+        this.uniforms.scale.value = value;
+    }
+});
