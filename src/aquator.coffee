@@ -161,8 +161,6 @@ class EnemyFish extends GameObject
     constructor : (pos, vel) ->
         @type = 'enemy'
         @asset = 'fish{0}'
-        @startframe = 0
-        @endframe = 4
         @physics = true
         @initialPosition = pos
         @initialVelocity = vel
@@ -348,7 +346,7 @@ class Explosion extends GameObject
 class PlayerShip extends GameObject
     constructor: () ->
         @type = "container"
-        @asset = "ship"
+        @asset = "ship{0}"
         @name  = "TheShip"
         @physics = true
         @collideWith = 'enemy'
@@ -356,8 +354,8 @@ class PlayerShip extends GameObject
     initialize : (game) ->
         @container.anchor.x = 0.5
         @container.anchor.y = 0.5
-        @container.scale.x = 0.25
-        @container.scale.y = 0.25
+        @container.scale.x = 2
+        @container.scale.y = 2
         @container.alpha = 0       # fade in
         @phys.pos.x = 200
         @phys.pos.y = game.canvas.height/2
@@ -367,6 +365,8 @@ class PlayerShip extends GameObject
         @collisionRadius = (@container.width+@container.height)/4
         # create health bar
         @energy = game.createComposedSprite(new PlayerHealthbar(new Vec2(150,game.canvas.height-30)))
+        @container.animationSpeed=0.1
+        @container.gotoAndPlay(0)
         @
 
     collision : (game, collider) ->
@@ -391,14 +391,14 @@ class PlayerShip extends GameObject
         bubbleoff= 1
         bubbleoff = 5 if @phys.force.length2() > 0
 
-        pos = new Vec2(@container.position.x-28, @container.position.y-9+Math.sin(@count)*bubbleoff)
+        pos = new Vec2(@container.position.x-50, @container.position.y-9+Math.sin(@count)*bubbleoff)
         game.createSprite(new PropulsionBubble(pos, new Vec2(-2,0)))
         @count += 1
 
         # fire shots with space bar
         if game.keys[32]==1
             if @shotctr==0
-                game.createSprite(new StandardShot(new Vec2(@container.position.x+20,@container.position.y),new Vec2(5,0) ))
+                game.createSprite(new StandardShot(new Vec2(@container.position.x+10,@container.position.y+15),new Vec2(5,0) ))
                 ++@shotctr
         else
            @shotctr=0
@@ -423,24 +423,25 @@ class Game
         @eventhandler = new GameEventHandler()
         @assets = new AssetLibrary(
             sprites:
-                'ship'    : { file: "sprites/ship.png" },
-                'bubble'  : { file: "sprites/ship_tail.png"}
-                'bubble2' : { file: "sprites/bubble2.png"}
+#                'ship'    : { file: "sprites/ship.png" },
+                'ship{0}' : { file: "sprites/ship{0}.png", startframe:0, endframe:5, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'bubble'  : { file: "sprites/ship_tail.png"},
+                'bubble2' : { file: "sprites/bubble2.png"},
                 'missile' : { file: "sprites/missile.png" },
-                'explosion1' : { file: "sprites/explosion1.png"}
-                'bg1'     : { file: "bg/layer1.png"}
-                'bg1dist' : { file: "bg/layer1-dist.png"}
-                'bg2'     : { file: "bg/layer2.png"}
-                'bg1-3'   : { file: "bg/bg1-3.png"}
-                'wobble1' : { file: "maps/displacementbg.png"}
-                'light'   : { file: "maps/light.png"}
-                'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  }
-                'verdana' : { font: "fonts/verdana.xml" }
-                'getready' : { file: "fonts/getready.png" }
-                'hbarl'   : { file: "ui/hbarl.gif" }
-                'hbarm'   : { file: "ui/hbarm.gif" }
-                'hbarr'   : { file: "ui/hbarr.gif" }
-                'shark'   : { file: "sprites/shark.png" }
+                'explosion1' : { file: "sprites/explosion1.png"},
+                'bg1'     : { file: "bg/layer1.png"},
+                'bg1dist' : { file: "bg/layer1-dist.png"},
+                'bg2'     : { file: "bg/layer2.png"},
+                'bg1-3'   : { file: "bg/bg1-3.png"},
+                'wobble1' : { file: "maps/displacementbg.png"},
+                'light'   : { file: "maps/light.png"},
+                'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
+                'verdana' : { font: "fonts/verdana.xml" },
+                'getready' : { file: "fonts/getready.png" },
+                'hbarl'   : { file: "ui/hbarl.gif" },
+                'hbarm'   : { file: "ui/hbarm.gif" },
+                'hbarr'   : { file: "ui/hbarr.gif" },
+                'shark'   : { file: "sprites/shark.png" },
             datadir: 'res/'
         )
 
@@ -490,7 +491,8 @@ class Game
     createAnimatedSprite : (sobj) ->
         # create a container composed of multiple sprites
         tex = []
-        for i in [sobj.startframe..sobj.endframe]
+        ass = @assets.sprites[sobj.asset]
+        for i in [ass.startframe..ass.endframe]
             tex.push(@assets.textures[sobj.asset.format(i)])
         sobj.container = new PIXI.MovieClip(tex)
         @repository.createGObject(sobj)
@@ -579,7 +581,7 @@ class Game
 
         @createSprite(new BlinkingSprite(new Vec2(400,300), "getready", 3))
         # spawn ship
-        @createEvent( new GameEvent(5*30, => @createSprite(new PlayerShip())))        
+        @createEvent( new GameEvent(5*30, => @createAnimatedSprite(new PlayerShip())))        
 
         #@createAnimatedSprite(new EnemyFish(new Vec2(960,320), new Vec2(-1,0)))
 

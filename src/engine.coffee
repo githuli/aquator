@@ -401,6 +401,8 @@ class AssetLibrary extends Base
                     filename = (@datadir + value.file).format(i)
                     if not @textures.hasOwnProperty(name) and value.hasOwnProperty('file')
                         @textures[assetname] = PIXI.Texture.fromImage(filename)
+                        if value.hasOwnProperty('scaleMode')
+                            @textures[assetname].baseTexture.scaleMode = value.scaleMode
             else
                 if not @textures.hasOwnProperty(name) and value.hasOwnProperty('file')
                     @textures[name] = PIXI.Texture.fromImage(@datadir + value.file)
