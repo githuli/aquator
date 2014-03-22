@@ -305,24 +305,27 @@ class StandardShot extends GameObject
 class BeamCharge extends GameObject
     constructor: (pos) ->
         @type = 'shot'
-        @asset = 'beam'
+        @asset = 'pullshotload{0}'
         @layer = 'shipfront'
         @physics = true
         @initialPosition = pos
         @
 
     initialize : (game) ->
-        @setScale(0,0)
+        ship = game.repository.getNamedGObject("TheShip")
         @setAnchor(0.5,0.5)
+        @setScale(ship.container.scale.x,ship.container.scale.y)
         @ctr = 0
+        @container.animationSpeed=0.125
+        @container.gotoAndPlay(0)        
         @
 
     update : (game) ->
         ship = game.repository.getNamedGObject("TheShip")
-        @phys.pos = ship.phys.pos.addC(new Vec2(25,10))
+        @phys.pos = ship.phys.pos
         if game.keys[32]==1
             @ctr++
-            @setScale(@ctr/30.0,@ctr/30.0)
+        #    @setScale(@ctr/30.0,@ctr/30.0)
         else
             game.createEvent(new RemoveGOBEvent(game.repository, @))
         @
@@ -443,7 +446,7 @@ class PlayerShip extends GameObject
                 game.createSprite(new StandardShot(new Vec2(@container.position.x+10,@container.position.y+15),new Vec2(5,0) ))
                 ++@shotctr
             if @shotctr==1
-                game.createSprite(new BeamCharge(new Vec2(@container.position.x+20,@container.position.y+10)))
+                game.createAnimatedSprite(new BeamCharge(new Vec2(@container.position.x+20,@container.position.y+10)))
                 ++@shotctr
         else
            @shotctr=0
@@ -482,6 +485,7 @@ class Game
                 'wobble1' : { file: "maps/displacementbg.png"},
                 'light'   : { file: "maps/light.png"},
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
+                'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10  },
                 'verdana' : { font: "fonts/verdana.xml" },
                 'getready' : { file: "fonts/getready.png" },
                 'hbarl'   : { file: "ui/hbarl.gif" },
