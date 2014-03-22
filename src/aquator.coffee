@@ -208,6 +208,7 @@ class EnemyFish extends GameObject
 
     collision : (game, collider) ->
         @HP -= collider.damage
+        collider.damage--
 
         # flash fish
         @container.filters = [game.flashFilter]
@@ -270,6 +271,7 @@ class EnemyShark extends GameObject
 
     collision : (game, collider) ->
         @HP -= collider.damage
+        collider.damage--
         # flash fish
         @container.filters = [ @wobble, game.flashFilter ]
         game.createEvent( new GameEvent(10, => @container.filters = [ @wobble ] ) )
@@ -291,7 +293,7 @@ class StandardShot extends GameObject
         @destroyOnCollision = true
 
     initialize : (game) ->
-        @phys.force = new Vec2(0.2,0.0)    # standard shot is being accelerated
+        @phys.force = new Vec2(0.1,0.0)    # standard shot is being accelerated
         @update(game)
         @
 
@@ -304,16 +306,17 @@ class StandardShot extends GameObject
 # and spawns a BeamShot when spacebar is released
 class BeamCharge extends GameObject
     constructor: () ->
-        @type = 'anim'
+        @type = 'shot'
         @asset = 'pullshotload{0}'
         @layer = 'shipfront'
         @physics = true
         @
 
     initialize : (game) ->
-        ship = game.repository.getNamedGObject("TheShip")
         @setAnchor(0.5,0.5)
-        @setScale(ship.container.scale.x,ship.container.scale.y)
+        ship = game.repository.getNamedGObject("TheShip")
+        if ship
+            @setScale(ship.container.scale.x,ship.container.scale.y)
         @ctr = 0
         @container.animationSpeed=0.125
         @container.gotoAndPlay(0)
@@ -322,7 +325,11 @@ class BeamCharge extends GameObject
 
     update : (game) ->
         ship = game.repository.getNamedGObject("TheShip")
-        @phys.pos = ship.phys.pos
+        if ship
+            @phys.pos = ship.phys.pos
+        else 
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+            return @
         if game.keys[32]==1
             @ctr++ if @ctr < 80
         else
@@ -342,8 +349,9 @@ class BeamStart extends GameObject
     initialize : (game) ->
         ship = game.repository.getNamedGObject("TheShip")
         @setAnchor(0.5,0.5)
-        sfact = @amount/80
-        @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
+        if ship
+            sfact = @amount/80
+            @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
         @container.animationSpeed=0.3
         @container.gotoAndPlay(0)        
         @ctr = 0
@@ -351,7 +359,8 @@ class BeamStart extends GameObject
     
     update : (game) ->
         ship = game.repository.getNamedGObject("TheShip")        
-        @phys.pos = ship.phys.pos.addC(new Vec2(25,5))
+        if ship
+            @phys.pos = ship.phys.pos.addC(new Vec2(25,5))
         @ctr++
         if @ctr > 5
             game.createEvent(new RemoveGOBEvent(game.repository, @))
@@ -366,20 +375,22 @@ class BeamShot extends GameObject
         @physics = true
         @initialPosition = new Vec2(pos.x,pos.y)
         @amount = amount
+        @damage = amount        
         @
 
     initialize : (game) ->
         ship = game.repository.getNamedGObject("TheShip")   
         @setAnchor(0.5,0.5)
-        sfact = @amount/80
-        @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
+        if ship
+            sfact = @amount/80
+            @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
         @container.animationSpeed=0.25
         @container.gotoAndPlay(0)
-        @phys.velocity.set(2.0,0.0)
+        @phys.velocity.set(4.0,0.0)
         @
 
     update : (game) ->
-        if @container.position.x > game.canvas.width
+        if @container.position.x > game.canvas.width or @damage <= 0
             game.createEvent(new RemoveGOBEvent(game.repository, @))
         @
 
@@ -495,6 +506,7 @@ class PlayerShip extends GameObject
             # remove health bar and ship
             game.createEvent(new RemoveGOBEvent(game.repository, @energy))
             game.createEvent(new RemoveGOBEvent(game.repository, @))
+            @container.alpha = 0.0
             # create explosion
             game.createSprite(new Explosion(@phys.pos.dup(), 0.25))
         @
