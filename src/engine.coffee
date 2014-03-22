@@ -207,7 +207,6 @@ class GameObject extends Base
     update : (game) ->
         @
 
-
     updateGO : (game) ->
         @phys.physicsTick() if @phys
         @update(game)
@@ -224,6 +223,17 @@ class GameObject extends Base
                         if c.hasOwnProperty('destroyOnCollision')
                              game.createEvent(new RemoveGOBEvent(game.repository, c))
         @
+
+    setScale : (x, y) ->
+        if @container
+            @container.scale.x = x
+            @container.scale.y = y
+        @
+    
+    setAnchor : (x, y) ->
+        if @container
+            @container.anchor.x = x
+            @container.anchor.y = y
 
 class GameObjectRepository
     # the storage contains an array for each type of game object
@@ -388,7 +398,7 @@ class AssetLibrary extends Base
                 assets.push(@datadir + value.font) if value.hasOwnProperty('font')
         assets
 
-    initializeAssets : () ->
+    initializeAssets : (stage) ->
         # load from files        
         for name, value of @sprites
             if value.hasOwnProperty('endframe')
@@ -406,7 +416,11 @@ class AssetLibrary extends Base
             else
                 if not @textures.hasOwnProperty(name) and value.hasOwnProperty('file')
                     @textures[name] = PIXI.Texture.fromImage(@datadir + value.file)
-
+        # initialize layer objects
+        for name of @layers
+            @layers[name] = new PIXI.DisplayObjectContainer()
+            stage.addChild(@layers[name])
+        @
     
 #------------------------------------------------------------------------------
 # Reusable Game objects

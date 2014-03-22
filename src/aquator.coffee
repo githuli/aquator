@@ -30,6 +30,7 @@ class PlayerScore extends GameObject
         @visualType = "Text"
         @asset = { font: "15px Verdana", align: "left" }
         @pos = pos
+        @layer = 'ui'
 
     initialize: (game) ->
         @addScore(0)
@@ -51,6 +52,7 @@ class PlayerHealthbar extends GameObject
         @assets = [ { asset:"hbarl", x:0, y:0 }, { asset:"hbarm", x:0, y:0 }, { asset:"hbarr", x:0, y:0 } ]
         @energy = 0
         @pos = pos
+        @layer = 'ui'        
 
     initialize: (game) ->
         @offL = @sprites.hbarl.width
@@ -160,6 +162,7 @@ class ParallaxScrollingBackground extends GameObject
 class EnemyFish extends GameObject
     constructor : (pos, vel) ->
         @type = 'enemy'
+        @layer = 'enemies'
         @asset = 'fish{0}'
         @physics = true
         @initialPosition = pos
@@ -170,10 +173,8 @@ class EnemyFish extends GameObject
 
     initialize : (game) ->
         @phys.friction = 0.1
-        @container.anchor.x = 0.5
-        @container.anchor.y = 0.5
-        @container.scale.x = 0.25
-        @container.scale.y = 0.25
+        @setAnchor(0.5,0.5)
+        @setScale(0.25,0.25)
         @container.animationSpeed=0.25
         @container.gotoAndPlay(0)
         @
@@ -219,6 +220,7 @@ class EnemyFish extends GameObject
 class EnemyShark extends GameObject
     constructor : (pos, vel) ->
         @type = 'enemy'
+        @layer = 'enemies'        
         @asset = 'shark'
         @physics = true
         @initialPosition = pos
@@ -231,10 +233,8 @@ class EnemyShark extends GameObject
 
     initialize : (game) ->
         @phys.friction = 0.03
-        @container.anchor.x = 0.5
-        @container.anchor.y = 0.5
-        @container.scale.x = 0.25
-        @container.scale.y = 0.25
+        @setAnchor(0.5,0.5)
+        @setScale(0.25,0.25)
         @wobble = new PIXI.WobbleFilter()
         @wobble.scale.x = 12.0
         @wobble.scale.y = 0.003
@@ -281,8 +281,9 @@ class EnemyShark extends GameObject
 # The "standard" shot, just a horizontally flying projectile
 class StandardShot extends GameObject
     constructor: (position, velocity) ->
-        @type = "shot"
-        @asset = "missile"
+        @type = 'shot'
+        @layer = 'ship'        
+        @asset = 'missile'
         @physics = true
         @initialPosition = position
         @initialVelocity = velocity
@@ -290,7 +291,7 @@ class StandardShot extends GameObject
         @destroyOnCollision = true
 
     initialize : (game) ->
-        @phys.force = new Vec2(0.3,0.0)    # standard shot is being accelerated
+        @phys.force = new Vec2(0.2,0.0)    # standard shot is being accelerated
         @update(game)
         @
 
@@ -298,11 +299,55 @@ class StandardShot extends GameObject
         if @container.position.x > game.canvas.width
             game.createEvent(new RemoveGOBEvent(game.repository, @))
 
+# The "beam" shot consists of two parts: charge + shot
+# charge is 'chargin' at the ship position (+ increasing size)
+# and spawns a BeamShot when spacebar is released
+class BeamCharge extends GameObject
+    constructor: (pos) ->
+        @type = 'shot'
+        @asset = 'beam'
+        @layer = 'shipfront'
+        @physics = true
+        @initialPosition = pos
+        @
+
+    initialize : (game) ->
+        @setScale(0,0)
+        @setAnchor(0.5,0.5)
+        @ctr = 0
+        @
+
+    update : (game) ->
+        ship = game.repository.getNamedGObject("TheShip")
+        @phys.pos = ship.phys.pos.addC(new Vec2(25,10))
+        if game.keys[32]==1
+            @ctr++
+            @setScale(@ctr/30.0,@ctr/30.0)
+        else
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+        @
+        
+class BeamShot extends GameObject
+    constructor: () ->
+        @type = 'shot'
+        @asset = 'beam'
+        @layer = 'shipfront'        
+        @physics = true
+        @
+
+    initialize : (game) ->
+        @
+
+    update : (game) ->
+        @
+
+
 
 class PropulsionBubble extends GameObject
     constructor: (position, velocity) ->
-        @type = "container"
-        @asset = "bubble2"
+        @type = 'container'
+        @asset = 'bubble2'
+        @layer = 'shipback'
         @physics = true
         @initialPosition = position
         @initialVelocity = velocity
@@ -325,10 +370,8 @@ class Explosion extends GameObject
         @size = size
         @count = 0
     initialize: (game) ->
-        @container.scale.x = @size
-        @container.scale.y = @size
-        @container.anchor.x = 0.5
-        @container.anchor.y = 0.5
+        @setScale(@size,@size)
+        @setAnchor(0.5,0.5)
         @dpFilter = new PIXI.DisplacementFilter(game.assets.textures["wobble1"]);
         @dpFilter.scale.x = 10
         @dpFilter.scale.y = 10
@@ -345,17 +388,16 @@ class Explosion extends GameObject
 
 class PlayerShip extends GameObject
     constructor: () ->
-        @type = "container"
-        @asset = "ship{0}"
-        @name  = "TheShip"
+        @type = 'container'
+        @asset = 'ship{0}'
+        @name  = 'TheShip'
+        @layer = 'ship'
         @physics = true
         @collideWith = 'enemy'
 
     initialize : (game) ->
-        @container.anchor.x = 0.5
-        @container.anchor.y = 0.5
-        @container.scale.x = 2
-        @container.scale.y = 2
+        @setAnchor(0.5,0.5)
+        @setScale(2,2)
         @container.alpha = 0       # fade in
         @phys.pos.x = 200
         @phys.pos.y = game.canvas.height/2
@@ -400,6 +442,9 @@ class PlayerShip extends GameObject
             if @shotctr==0
                 game.createSprite(new StandardShot(new Vec2(@container.position.x+10,@container.position.y+15),new Vec2(5,0) ))
                 ++@shotctr
+            if @shotctr==1
+                game.createSprite(new BeamCharge(new Vec2(@container.position.x+20,@container.position.y+10)))
+                ++@shotctr
         else
            @shotctr=0
 
@@ -428,6 +473,7 @@ class Game
                 'bubble'  : { file: "sprites/ship_tail.png"},
                 'bubble2' : { file: "sprites/bubble2.png"},
                 'missile' : { file: "sprites/missile.png" },
+                'beam'    : { file: "sprites/beam.png" },
                 'explosion1' : { file: "sprites/explosion1.png"},
                 'bg1'     : { file: "bg/layer1.png"},
                 'bg1dist' : { file: "bg/layer1-dist.png"},
@@ -443,7 +489,20 @@ class Game
                 'hbarr'   : { file: "ui/hbarr.gif" },
                 'shark'   : { file: "sprites/shark.png" },
             datadir: 'res/'
+            layers:         # layers are from front to back
+                'back0' : {}
+                'back1' : {}
+                'back2' : {}
+                'default' : {}
+                'enemies' : {}
+                'shipback'  : {}
+                'ship'  : {}
+                'shipfront' : {}
+                'front'  : {}
+                'ui'   : {}
+                'text' : {}
         )
+
 
         @flashFilter = new PIXI.ColorMatrixFilter()
         @flashFilter.matrix =  [2.0,0,0,0,0,2.0,0,0,0,0,2.0,0,0,0,0,1]
@@ -466,7 +525,10 @@ class Game
             sobj.container.position.x = sobj.position.x
             sobj.container.position.y = sobj.position.y
         @repository.createGObject(sobj)
-        @stage.addChild(sobj.container)
+        if sobj.layer
+            @assets.layers[sobj.layer].addChild(sobj.container)
+        else    
+            @assets.layers['default'].addChild(sobj.container)
         sobj.initialize(@) if sobj.initialize
         sobj
 
@@ -485,7 +547,10 @@ class Game
            sobj.container.addChild(container)
         @repository.createGObject(sobj)
         sobj.initialize(@) if sobj.initialize
-        @stage.addChild(sobj.container)
+        if sobj.layer
+            @assets.layers[sobj.layer].addChild(sobj.container)
+        else    
+            @assets.layers['default'].addChild(sobj.container)
         sobj
 
     createAnimatedSprite : (sobj) ->
@@ -497,14 +562,17 @@ class Game
         sobj.container = new PIXI.MovieClip(tex)
         @repository.createGObject(sobj)
         sobj.initialize(@) if sobj.initialize
-        @stage.addChild(sobj.container)
+        if sobj.layer
+            @assets.layers[sobj.layer].addChild(sobj.container)
+        else    
+            @assets.layers['default'].addChild(sobj.container)
         @
 
     createText : (tobj) ->
         tobj.container = new PIXI.BitmapText(tobj.text, tobj.asset)
         @repository.createGObject(tobj)
         tobj.initialize(@) if tobj.initialize
-        @stage.addChild(tobj.container)
+        @assets.layers['text'].addChild(tobj.container)
         tobj
 
     createGObject: (gobj) ->
@@ -533,19 +601,15 @@ class Game
 
     mainLoop : () =>
         @update()
-        ship = @repository.getNamedGObject("TheShip")
-        if ship
-            @stage.removeChild(ship.container)
-            @stage.addChild(ship.container)
         @renderer.render(@stage)
         requestAnimFrame(@mainLoop)
 
     run : () =>
         # assets have been loaded
-        @assets.initializeAssets()
         document.onkeydown = @keyDownHandler
         document.onkeyup = @keyUpHandler
         @stage = new PIXI.Stage(0x14184a);
+        @assets.initializeAssets(@stage)
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
 
@@ -561,16 +625,13 @@ class Game
         layer1=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1-3", x:0, y:0, w:2880, h:640 } ],
             useWobble : true,
+            layer : 'back0'
             #useShiplight : false,
         ))
-        # layer2=@createComposedSprite(new BackgroundLayer(
-        #     assets : [   { asset:"bg2", x:0, y:0, w:3840, h:640 } ],
-        #     useWobble : true,
-        #     #useShiplight : false,
-        # ))
         layer3=@createComposedSprite(new BackgroundLayer(
             assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
             useCollision : true,
+            layer : 'back1'
             #useShiplight : true,
         ))
         # [layer1,layer2,layer3]
