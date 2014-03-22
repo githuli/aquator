@@ -303,12 +303,11 @@ class StandardShot extends GameObject
 # charge is 'chargin' at the ship position (+ increasing size)
 # and spawns a BeamShot when spacebar is released
 class BeamCharge extends GameObject
-    constructor: (pos) ->
-        @type = 'shot'
+    constructor: () ->
+        @type = 'anim'
         @asset = 'pullshotload{0}'
         @layer = 'shipfront'
         @physics = true
-        @initialPosition = pos
         @
 
     initialize : (game) ->
@@ -317,31 +316,71 @@ class BeamCharge extends GameObject
         @setScale(ship.container.scale.x,ship.container.scale.y)
         @ctr = 0
         @container.animationSpeed=0.125
-        @container.gotoAndPlay(0)        
+        @container.gotoAndPlay(0)
+        @update
         @
 
     update : (game) ->
         ship = game.repository.getNamedGObject("TheShip")
         @phys.pos = ship.phys.pos
         if game.keys[32]==1
-            @ctr++
-        #    @setScale(@ctr/30.0,@ctr/30.0)
+            @ctr++ if @ctr < 80
         else
+            # release shot
             game.createEvent(new RemoveGOBEvent(game.repository, @))
+            if @ctr > 10
+                game.createAnimatedSprite(new BeamStart(@ctr))
         @
         
-class BeamShot extends GameObject
-    constructor: () ->
+class BeamStart extends GameObject
+    constructor: (amount) ->
         @type = 'shot'
-        @asset = 'beam'
-        @layer = 'shipfront'        
+        @asset = 'pullshotstart{0}'
+        @layer = 'shipfront'
         @physics = true
+        @amount = amount
+    initialize : (game) ->
+        ship = game.repository.getNamedGObject("TheShip")
+        @setAnchor(0.5,0.5)
+        sfact = @amount/80
+        @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
+        @container.animationSpeed=0.3
+        @container.gotoAndPlay(0)        
+        @ctr = 0
+        @
+    
+    update : (game) ->
+        ship = game.repository.getNamedGObject("TheShip")        
+        @phys.pos = ship.phys.pos.addC(new Vec2(25,5))
+        @ctr++
+        if @ctr > 5
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+            game.createAnimatedSprite(new BeamShot(@phys.pos, @amount))
+        @
+
+class BeamShot extends GameObject
+    constructor: (pos, amount) ->
+        @type = 'shot'
+        @asset = 'pullshotloop{0}'
+        @layer = 'shipback'
+        @physics = true
+        @initialPosition = new Vec2(pos.x,pos.y)
+        @amount = amount
         @
 
     initialize : (game) ->
+        ship = game.repository.getNamedGObject("TheShip")   
+        @setAnchor(0.5,0.5)
+        sfact = @amount/80
+        @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
+        @container.animationSpeed=0.25
+        @container.gotoAndPlay(0)
+        @phys.velocity.set(2.0,0.0)
         @
 
     update : (game) ->
+        if @container.position.x > game.canvas.width
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
         @
 
 
@@ -486,6 +525,8 @@ class Game
                 'light'   : { file: "maps/light.png"},
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
                 'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10  },
+                'pullshotstart{0}' : { file: "sprites/pullshot/pull_shot_start{0}.png", startframe:0, endframe:1  },
+                'pullshotloop{0}' : { file: "sprites/pullshot/pull_shot_loop{0}.png", startframe:0, endframe:4  },
                 'verdana' : { font: "fonts/verdana.xml" },
                 'getready' : { file: "fonts/getready.png" },
                 'hbarl'   : { file: "ui/hbarl.gif" },
