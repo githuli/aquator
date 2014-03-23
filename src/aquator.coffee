@@ -386,7 +386,7 @@ class BeamShot extends GameObject
             @setScale(ship.container.scale.x*sfact,ship.container.scale.y*sfact)
         @container.animationSpeed=0.25
         @container.gotoAndPlay(0)
-        @phys.velocity.set(4.0,0.0)
+        @phys.velocity.set(5.0,0.0)
         @
 
     update : (game) ->
@@ -536,9 +536,9 @@ class Game
                 'wobble1' : { file: "maps/displacementbg.png"},
                 'light'   : { file: "maps/light.png"},
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
-                'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10  },
-                'pullshotstart{0}' : { file: "sprites/pullshot/pull_shot_start{0}.png", startframe:0, endframe:1  },
-                'pullshotloop{0}' : { file: "sprites/pullshot/pull_shot_loop{0}.png", startframe:0, endframe:4  },
+                'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'pullshotstart{0}' : { file: "sprites/pullshot/pull_shot_start{0}.png", startframe:0, endframe:1, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'pullshotloop{0}' : { file: "sprites/pullshot/pull_shot_loop{0}.png", startframe:0, endframe:4, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
                 'verdana' : { font: "fonts/verdana.xml" },
                 'getready' : { file: "fonts/getready.png" },
                 'hbarl'   : { file: "ui/hbarl.gif" },
