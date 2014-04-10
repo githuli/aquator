@@ -102,8 +102,9 @@ class BackgroundLayer extends GameObject
         if @assets[0].dfield
             img = game.assets.textures[@assets[0].dfield].baseTexture.source
             canvas = document.createElement('canvas');
-            canvas.width = img.width
-            canvas.height = img.height
+
+            canvas.width = screen.width
+            canvas.height = screen.height
             context = canvas.getContext('2d');
             context.drawImage(img, 0, 0 );
             @distanceMap = context.getImageData(0, 0, img.width, img.height);
@@ -530,9 +531,11 @@ class Game
                 'beam'    : { file: "sprites/beam.png" },
                 'explosion1' : { file: "sprites/explosion1.png"},
                 'bg1'     : { file: "bg/layer1.png"},
+                'bg-middle': { file: "bg/bg-middle.png"},
                 'bg1dist' : { file: "bg/layer1-dist.png"},
                 'bg2'     : { file: "bg/layer2.png"},
                 'bg1-3'   : { file: "bg/bg1-3.png"},
+                'bg-far'  : {file:  'bg/bg-far.png', scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST},
                 'wobble1' : { file: "maps/displacementbg.png"},
                 'light'   : { file: "maps/light.png"},
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
@@ -680,17 +683,23 @@ class Game
         # initialize level
 
         layer1=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg1-3", x:0, y:0, w:2880, h:640 } ],
+            assets : [   { asset:"bg-far", x:0, y:0, w:2300, h:240, sx: 3, sy: 3 } ],
             useWobble : true,
             layer : 'back0'
             #useShiplight : false,
         ))
         layer3=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
+            assets : [   { asset:"bg-middle", sx:3, sy:3, x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
             useCollision : true,
             layer : 'back1'
             #useShiplight : true,
         ))
+#        layer3=@createComposedSprite(new BackgroundLayer(
+#            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
+#            useCollision : true,
+#            layer : 'back1'
+#            #useShiplight : true,
+#        ))
         # [layer1,layer2,layer3]
         background = @createGObject( new ParallaxScrollingBackground([layer1,layer3]) )
         
