@@ -208,6 +208,8 @@ class EnemyFish extends GameObject
         @
 
     collision : (game, collider) ->
+        if not collider.damage
+            console.log("wtf.")
         @HP -= collider.damage
         collider.damage--
 
@@ -307,7 +309,7 @@ class StandardShot extends GameObject
 # and spawns a BeamShot when spacebar is released
 class BeamCharge extends GameObject
     constructor: () ->
-        @type = 'shot'
+        @type = 'charge'  # should not collide with enemies
         @asset = 'pullshotload{0}'
         @layer = 'shipfront'
         @physics = true
@@ -342,7 +344,7 @@ class BeamCharge extends GameObject
         
 class BeamStart extends GameObject
     constructor: (amount) ->
-        @type = 'shot'
+        @type = 'charge'
         @asset = 'pullshotstart{0}'
         @layer = 'shipfront'
         @physics = true

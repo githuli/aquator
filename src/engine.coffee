@@ -218,7 +218,7 @@ class GameObject extends Base
             if candidates
                 for c in candidates
                     # for now, use bounding box of sprites for collision
-                    if CollisionDetection.collideSprite(@container, c.container)
+                    if @collision and CollisionDetection.collideSprite(@container, c.container)
                         @collision(game,c)
                         if c.hasOwnProperty('destroyOnCollision')
                              game.createEvent(new RemoveGOBEvent(game.repository, c))
