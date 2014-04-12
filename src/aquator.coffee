@@ -531,11 +531,11 @@ class Game
                 'beam'    : { file: "sprites/beam.png" },
                 'explosion1' : { file: "sprites/explosion1.png"},
                 'bg1'     : { file: "bg/layer1.png"},
-                'bg-middle': { file: "bg/bg-middle.png"},
+                'bg-middle': { file: "bg/bg-middle.png", scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST },
                 'bg1dist' : { file: "bg/layer1-dist.png"},
                 'bg2'     : { file: "bg/layer2.png"},
                 'bg1-3'   : { file: "bg/bg1-3.png"},
-                'bg-far'  : {file:  'bg/bg-far.png', scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST},
+                'bg-far'  : {file:  'bg/bg-far.png' },
                 'wobble1' : { file: "maps/displacementbg.png"},
                 'light'   : { file: "maps/light.png"},
                 'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
@@ -689,14 +689,12 @@ class Game
             #useShiplight : false,
         ))
         layer3=@createComposedSprite(new BackgroundLayer(
-            assets : [   { asset:"bg-middle", sx:3, sy:3, x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
-            useCollision : true,
+            assets : [   { asset:"bg-middle", sx:3, sy:3, x:0, y:0, w:4800, h:640 } ],   #, dfield:"bg1dist"
             layer : 'back1'
             #useShiplight : true,
         ))
 #        layer3=@createComposedSprite(new BackgroundLayer(
 #            assets : [   { asset:"bg1", x:0, y:0, w:4800, h:640, dfield:"bg1dist" } ],
-#            useCollision : true,
 #            layer : 'back1'
 #            #useShiplight : true,
 #        ))
