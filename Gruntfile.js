@@ -29,6 +29,8 @@ module.exports = function(grunt){
                 },
                 files: {
                     'js/game.js': [
+                        'src/math.coffee',
+                        'src/physics.coffee',
                         'src/engine.coffee',
                         'src/aquator.coffee',
                     ],
