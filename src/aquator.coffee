@@ -378,7 +378,7 @@ class BeamShot extends GameObject
         @physics = true
         @initialPosition = new Vec2(pos.x,pos.y)
         @amount = amount
-        @damage = amount        
+        @damage = amount/4
         @
 
     initialize : (game) ->
@@ -475,11 +475,12 @@ class PlayerShip extends GameObject
         @container.alpha += 0.05 if @container.alpha < 1.0
 
         @phys.force.set(0,0)
+        acceleration = 0.5
         # update forces depending on controls
-        @phys.force.x -= 1 if game.keys[37] == 1              # left
-        @phys.force.x += 1 if game.keys[39] == 1              # right
-        @phys.force.y -= 1 if game.keys[38] == 1              # up
-        @phys.force.y += 1 if game.keys[40] == 1              # down
+        @phys.force.x -= acceleration if game.keys[37] == 1              # left
+        @phys.force.x += acceleration if game.keys[39] == 1              # right
+        @phys.force.y -= acceleration if game.keys[38] == 1              # up
+        @phys.force.y += acceleration if game.keys[40] == 1              # down
 
         # clamp position
         @phys.pos.x = Tools.clampValue(@phys.pos.x, 0, game.canvas.width-@container.width)
@@ -490,7 +491,7 @@ class PlayerShip extends GameObject
         bubbleoff = 5 if @phys.force.length2() > 0
 
         pos = new Vec2(@container.position.x-50, @container.position.y-9+Math.sin(@count)*bubbleoff)
-        game.createSprite(new PropulsionBubble(pos, new Vec2(-2,0)))
+        game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
         @count += 1
 
         # fire shots with space bar
