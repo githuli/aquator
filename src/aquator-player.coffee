@@ -182,7 +182,7 @@ class PlayerShip extends GameObject
 
         # spawn bubble particles
         bubbleoff= 1
-        bubbleoff = 5 if @phys.force.length2() > 0
+        bubbleoff = 5 if @phys.force.length2() > 0.1
 
         pos = new Vec2(@container.position.x-50, @container.position.y-9+Math.sin(@count)*bubbleoff)
         game.createSprite(new PropulsionBubble(pos, new Vec2(-3,0)))
