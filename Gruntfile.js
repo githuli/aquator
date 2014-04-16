@@ -32,7 +32,11 @@ module.exports = function(grunt){
                         'src/math.coffee',
                         'src/physics.coffee',
                         'src/engine.coffee',
-                        'src/aquator.coffee',
+                        'src/aquator-ui.coffee',
+                        'src/aquator-level.coffee',
+                        'src/aquator-enemies.coffee',
+                        'src/aquator-player.coffee',
+                        'src/aquator-game.coffee',
                     ],
                 }
             },
