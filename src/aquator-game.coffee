@@ -34,7 +34,7 @@ class Game
                 'hbarr'   : { file: "ui/hbarr.gif" },
                 'shark'   : { file: "sprites/shark.png" },
             datadir: 'res/'
-            layers:         # layers are from front to back
+            layers:         # layers are rendered from front to back
                 'back0' : {}
                 'back1' : {}
                 'back2' : {}

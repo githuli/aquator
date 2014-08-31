@@ -169,7 +169,7 @@ class PlayerShip extends GameObject
         @container.alpha += 0.05 if @container.alpha < 1.0
 
         @phys.force.set(0,0)
-        acceleration = 0.5
+        acceleration = 0.6
         # update forces depending on controls
         @phys.force.x -= acceleration if game.keys[37] == 1              # left
         @phys.force.x += acceleration if game.keys[39] == 1              # right
