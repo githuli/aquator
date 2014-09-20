@@ -206,5 +206,5 @@ class PlayerShip extends GameObject
             game.createEvent(new RemoveGOBEvent(game.repository, @))
             @container.alpha = 0.0
             # create explosion
-            game.createSprite(new Explosion(@phys.pos.dup(), 0.25))
+            game.createAnimatedSprite(new Explosion2(@phys.pos.dup(), 1.0))
         @

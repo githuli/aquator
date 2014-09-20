@@ -1,32 +1,3 @@
-#
-# GameObjects have to define the following properties:
-# type: class of gameobjects this object is associated with
-#
-# the objects are created using the createGO method of the Game
-# class. 
-
-#
-# - Each GameObject has to define the following parameters
-# 'type'       [string] - group of things this GameObject belongs to (internal name)
-# 'visualType' [string] - visual representation: 
-#                         "Sprite", "AnimatedSprite", "ComposedSprite", "Text"
-# TODO: use visualType to distinguish between types for createion in aquator-game,
-#       get rid of create'xxx' methods, make "createGameObject" method in engine
-
-# - optional
-# 'physics'    [bool]   - if true, the engine maintains a physics state (position/velocity)
-#                         that is automatically applied to the visual representation
-# 'collideWith'         - if set, the engine performs collision detection with all objects 
-#                         of given 'type' value, will call "collision()" of any objects that collide
-#                         with the object this property is defined in
-# 'destroyOnCollision'  - if set, this object will automatically be destroyed after its collision()
-#                         method has been called
-
-# - it should define the following methods
-# 'initialize(game)'          - post initialization callback (sprites/physics have been instantiated)
-# 'update(game)'              - internal update method
-# 'collision(game, collider)' - collision callback that will be called if "this" object collides with
-#                               a object that defines 'collideWith' for objects of "this" type
 
 # -----------------------------------------------------------------------------
 # Player Score & Energy
@@ -102,6 +73,27 @@ class Explosion extends GameObject
         @container.alpha -= 0.02
         if @container.apha < 0
             game.createEvent(new RemoveGOBEvent(game.repository, @))
+
+
+class Explosion2 extends GameObject
+    constructor: (pos, size) ->
+        @type = 'explosion'
+        @asset = 'explosion2{0}'
+        @pos = pos
+        @size = size
+        @count = 0
+    initialize: (game) ->
+        @setScale(@size,@size)
+        @setAnchor(0.5,0.5)
+        @container.loop = false
+        @container.animationSpeed = 1.0
+        @container.gotoAndPlay(0)
+
+    update: (game) ->
+        if ++@count > 69
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
+
+
 
 # text that fades in at a specific position, displays for a while and fades out
 class FadingText extends GameObject 

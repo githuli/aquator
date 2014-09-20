@@ -15,6 +15,7 @@ class Game
                 'missile' : { file: "sprites/missile.png" },
                 'beam'    : { file: "sprites/beam.png" },
                 'explosion1' : { file: "sprites/explosion1.png"},
+                'explosion2{0}' : { file: "sprites/ex1/image{0}.png", startframe:1, endframe:69 },
                 'bg1'     : { file: "bg/layer1.png"},
                 'bg-middle': { file: "bg/bg-middle.png", scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST },
                 'bg1dist' : { file: "bg/layer1-dist.png"},

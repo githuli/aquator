@@ -45,7 +45,8 @@ class EnemyFish extends GameObject
         # see if we are dead
         if (@HP < 0)
             game.createEvent(new RemoveGOBEvent(game.repository, @))        
-            game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
+            #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
+            game.createAnimatedSprite(new Explosion2(@phys.pos.dup(), 1.0))
         @
 
     collision : (game, collider) ->
@@ -110,7 +111,8 @@ class EnemyShark extends GameObject
         # see if we are dead
         if (@HP < 0)
             game.createEvent(new RemoveGOBEvent(game.repository, @))        
-            game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
+            #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
+            game.createAnimatedSprite(new Explosion2(@phys.pos.dup(), 1.0))
         @
 
     collision : (game, collider) ->
