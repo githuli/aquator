@@ -93,6 +93,23 @@ class Explosion2 extends GameObject
         if ++@count > 69
             game.createEvent(new RemoveGOBEvent(game.repository, @))
 
+class Explosion4 extends GameObject
+    constructor: (pos, size) ->
+        @type = 'explosion'
+        @asset = 'explosion4{0}'
+        @pos = pos
+        @size = size
+        @count = 0
+    initialize: (game) ->
+        @setScale(@size,@size)
+        @setAnchor(0.5,0.5)
+        @container.loop = false
+        @container.animationSpeed = 1.0
+        @container.gotoAndPlay(0)
+
+    update: (game) ->
+        if ++@count > 54
+            game.createEvent(new RemoveGOBEvent(game.repository, @))
 
 
 # text that fades in at a specific position, displays for a while and fades out

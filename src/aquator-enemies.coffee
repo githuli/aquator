@@ -112,7 +112,7 @@ class EnemyShark extends GameObject
         if (@HP < 0)
             game.createEvent(new RemoveGOBEvent(game.repository, @))        
             #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
-            game.createAnimatedSprite(new Explosion2(@phys.pos.dup(), 1.0))
+            game.createAnimatedSprite(new Explosion4(@phys.pos.dup(), 1.0))
         @
 
     collision : (game, collider) ->
