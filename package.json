@@ -3,7 +3,6 @@
   "repository": "https://github.com/githuli/aquator",
   "devDependencies": {
     "coffee-script": "*",
-    "bower": "*",
     "grunt": "~0.4.2",
     "grunt-cli": "*",
     "grunt-contrib-coffee": "*",
@@ -14,7 +13,7 @@
     "grunt-coffee-jshint": "~0.2.0"
   },
   "scripts": {
-    "build": "npm install && bower install && grunt"
+    "build": "npm install && grunt"
   },
   "dependencies": {
     "pixi.js": "~1.4.1"
