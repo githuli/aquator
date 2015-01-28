@@ -24,7 +24,7 @@ function DrawControlPoints()
   for (i = 0; i<controlx.length; ++i)
   {
     ctx.beginPath();
-    ctx.arc(controlx[i],controly[i],3,0,2*Math.PI);
+    ctx.arc(controlx[i]*canvas.width,controly[i]*canvas.height,3,0,2*Math.PI);
     ctx.fillStyle = 'green';
     ctx.fill();
     ctx.stroke();
@@ -63,12 +63,23 @@ function addControlPoint(event)
    var canvas = document.getElementById("glcanvas");
    event = event || window.event;
    
-   x = event.pageX - canvas.offsetLeft;
-   y = event.pageY - canvas.offsetTop;
+   x = (event.pageX - canvas.offsetLeft)/canvas.width;
+   y = (event.pageY - canvas.offsetTop)/canvas.height;
    controlx.push(x);
    controly.push(y);
    DrawControlPoints();
    showCoordinates();
+}
+
+function removeLastCP(event)
+{
+  controlx.pop();
+  controly.pop();
+  var canvas = document.getElementById("glcanvas");
+  var ctx = canvas.getContext('2d');
+  ctx.clearRect(0,0,canvas.width,canvas.height);
+  DrawControlPoints();
+  showCoordinates();
 }
 
 function getSplinePoints()
@@ -102,7 +113,7 @@ function drawSpline()
     {
       pt = points[i];
       ctx.beginPath();
-      ctx.arc(pt.x,pt.y,2,0,2*Math.PI);
+      ctx.arc(pt.x*canvas.width,pt.y*canvas.height,2,0,2*Math.PI);
       ctx.fillStyle = 'yellow';
       ctx.fill();
       ctx.stroke();
@@ -121,7 +132,7 @@ function moveShip()
       // clear background
       ctx.clearRect(0,0,canvas.width,canvas.height);
       pt = points[i];
-      ctx.drawImage(shipImage,pt.x,pt.y);
+      ctx.drawImage(shipImage,pt.x*canvas.width,pt.y*canvas.height);
       i++;
       if (i<points.length) {
         window.setTimeout(drawship, 15);
@@ -163,6 +174,7 @@ function showCoordinates()
 <button type="button" onclick="drawSpline()">Draw Catmull-Rom Spline!</button> 
 <button type="button" onclick="moveShip()">Move Ship</button> 
 <button type="button" onclick="clearAll()">Clear</button>
+<button type="button" onclick="removeLastCP()">Delete Last</button>
 <br>
 positions: <input id="numpts" type="text" size="10" maxlength="10" value="100">
 <p><b>control points</b></p>
