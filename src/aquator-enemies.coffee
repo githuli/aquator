@@ -1,17 +1,122 @@
 # -----------------------------------------------------------------------------
 # ENEMIES
 
-class EnemyFish extends GameObject
-    constructor : (pos, vel) ->
+
+# movement behavior is coded in the parent class
+
+class Enemy extends GameObject
+    constructor : () ->
         @type = 'enemy'
         @layer = 'enemies'
+        @count = 0
+        @collideWith = 'shot'
+        @
+
+    initialize : (game) ->
+        @
+
+
+    update : (game) ->
+        switch @movementBehaviour
+            when "swarm2player1"
+                # make enemy move into player direction
+                ship = game.repository.getNamedGObject("TheShip")
+                if ship
+                    @phys.force = ship.phys.pos.addC(@phys.pos.negC())
+                    @phys.force.normalizeTo(0.1)
+                else
+                    @phys.force.set(0,0)
+
+                if @phys.velocity.x<0
+                    @container.scale.x = 0.25
+                else
+                    @container.scale.x = -0.25
+                # introduce a 'repelling' force between enemies
+                enemies = game.repository.getGObjects('enemy')
+                for enemy in enemies
+                    if enemy != @
+                        f = @phys.pos.subC(enemy.getPos())
+                        @phys.force.add( f.smulC(0.5/f.length2()) )
+
+            when "random1"
+                --@count
+                if @count < 0
+                    if Math.random() < 0.5
+                        ship = game.repository.getNamedGObject("TheShip")
+                        # move into player direction
+                        if ship
+                            @phys.force = ship.phys.pos.addC(@phys.pos.negC())
+                            @phys.force.normalizeTo(0.3)
+                    else
+                       # move left
+                       @phys.force.set(-0.3,0.0)
+                    # stop force after 10 frames 
+                    game.createEvent( new GameEvent(13, => @phys.force.set(0,0)) )
+                    @count = 150
+
+            when "predefined"
+                ++@count
+                if @count < @movement.frames
+                    @pos = CatmullRom.evaluateSpline(@count/@movement.frames, @movement.x, @movement.y)
+                    @container.position.x = @pos.x * game.canvas.width
+                    @container.position.y = @pos.y * game.canvas.height
+                else 
+                    # movement done, remove sprite
+                    game.createEvent(new RemoveGOBEvent(game.repository, @))                            
+
+        # see if we are dead
+        if (@HP < 0)
+            game.createEvent(new RemoveGOBEvent(game.repository, @))        
+            #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))  
+            @explosion.pos = @getPos()
+            game.createAnimatedSprite(@explosion)
+        @
+
+    collision : (game, collider) ->
+        if not collider.damage
+            console.log("wtf.")
+
+        @HP -= collider.damage
+        collider.damage--
+
+        # flash fish
+        if not @container.filters
+            @container.filters = [ game.flashFilter ]
+        else
+            switch @container.filters.length
+                when 1
+                    @container.filters = [ @container.filters[0], game.flashFilter ]
+                when 2
+                    @container.filters = [ @container.filters[0], @container.filters[1], game.flashFilter ]
+
+        game.createEvent( new GameEvent(10, =>
+            if @container.filters
+                switch @container.filters.length
+                    when 1
+                        @container.filters = null
+                    when 2
+                        @container.filters = [ @container.filters[0] ]
+                    when 3
+                        @container.filters = [ @container.filters[0], @container.filters[1] ]
+        ))        
+        @
+
+
+# enemies defined here
+
+
+# swarm fishies
+class EnemyFish extends Enemy
+    constructor : (pos, vel) ->
+        super
         @asset = 'fish{0}'
         @physics = true
         @initialPosition = pos
         @initialVelocity = vel
-        @collideWith = 'shot'
         @HP = 50
         @score = 100
+        @movementBehaviour = "swarm2player1"
+        @explosion = new Explosion2(new Vec2(0,0), 1.0)
 
     initialize : (game) ->
         @phys.friction = 0.1
@@ -21,61 +126,40 @@ class EnemyFish extends GameObject
         @container.gotoAndPlay(0)
         @
 
-    update : (game) ->
-        # make enemy move into player direction
-        ship = game.repository.getNamedGObject("TheShip")
-        if ship
-            @phys.force = ship.phys.pos.addC(@phys.pos.negC())
-            @phys.force.normalizeTo(0.1)
-        else
-            @phys.force.set(0,0)
+class MovingFish extends Enemy
+    constructor : (movement) ->
+        super
+        @asset = 'fish{0}'
+        @HP = 20
+        @score = 100
+        @movementBehaviour = "predefined"
+        @movement = movement
+        @explosion = new Explosion2(new Vec2(0,0), 1.0)
+        @playerDamage = 5
 
-        if @phys.velocity.x<0
-            @container.scale.x = 0.25
-        else
-            @container.scale.x = -0.25
-
-        # introduce a 'repelling' force between fishes
-        fishes = game.repository.getGObjects('enemy')
-        for fish in fishes
-            if fish != @
-                f = @phys.pos.subC(fish.phys.pos)
-                @phys.force.add( f.smulC(0.5/f.length2()) )
-
-        # see if we are dead
-        if (@HP < 0)
-            game.createEvent(new RemoveGOBEvent(game.repository, @))        
-            #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
-            game.createAnimatedSprite(new Explosion2(@phys.pos.dup(), 1.0))
+    initialize : (game) ->
+        @setAnchor(0.5,0.5)
+        @setScale(0.25,0.25)
+        @container.animationSpeed=0.25
+        @container.gotoAndPlay(0)
+        @movement = game.assets.movements[@movement]
         @
 
-    collision : (game, collider) ->
-        if not collider.damage
-            console.log("wtf.")
-        @HP -= collider.damage
-        collider.damage--
-
-        # flash fish
-        @container.filters = [game.flashFilter]
-        game.createEvent( new GameEvent(10, =>
-                @container.filters = null
-        ))        
-        @
-
-
-class EnemyShark extends GameObject
+# randomly moving wobbling sharks
+class EnemyShark extends Enemy
     constructor : (pos, vel) ->
+        super
         @type = 'enemy'
         @layer = 'enemies'        
         @asset = 'shark'
         @physics = true
         @initialPosition = pos
         @initialVelocity = vel
-        @collideWith = 'shot'
         @HP = 100
         @score = 1337
         @count = 150
-        @
+        @movementBehaviour = "random1"
+        @explosion = new Explosion4(new Vec2(0,0), 1.0)
 
     initialize : (game) ->
         @phys.friction = 0.03
@@ -90,35 +174,7 @@ class EnemyShark extends GameObject
         @
 
     update : (game) ->
-        --@count
-        if @count < 0
-            if Math.random() < 0.5
-                ship = game.repository.getNamedGObject("TheShip")
-                # move into player direction
-                if ship
-                    @phys.force = ship.phys.pos.addC(@phys.pos.negC())
-                    @phys.force.normalizeTo(0.3)
-            else
-               # move left
-               @phys.force.set(-0.3,0.0)
-            # stop force after 10 frames 
-            game.createEvent( new GameEvent(13, => @phys.force.set(0,0)) )
-            @count = 150
-
-        @container.filters[0].offset = @wobbleoff
+        @wobble.offset = @wobbleoff
         @wobbleoff.add(@wobbleinc)
+        super(game)
 
-        # see if we are dead
-        if (@HP < 0)
-            game.createEvent(new RemoveGOBEvent(game.repository, @))        
-            #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))        
-            game.createAnimatedSprite(new Explosion4(@phys.pos.dup(), 1.0))
-        @
-
-    collision : (game, collider) ->
-        @HP -= collider.damage
-        collider.damage--
-        # flash fish
-        @container.filters = [ @wobble, game.flashFilter ]
-        game.createEvent( new GameEvent(10, => @container.filters = [ @wobble ] ) )
-        @        

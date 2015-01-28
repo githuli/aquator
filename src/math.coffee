@@ -106,7 +106,7 @@ CatmullRom =
 
         pt = 
             x :  CatmullRom.evaluateSegment( tt, cpx );
-            y :  CatmullRom.evaluateSegment( tt, cpx );
+            y :  CatmullRom.evaluateSegment( tt, cpy );
         pt
 
 

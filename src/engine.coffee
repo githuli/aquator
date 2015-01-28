@@ -142,6 +142,12 @@ class GameObject extends Base
             @container.anchor.x = x
             @container.anchor.y = y
 
+    getPos : () ->
+        if @phys
+            return @phys.pos.dup()
+        else 
+            new Vec2(@container.position.x,@container.position.y)
+
 class GameObjectRepository
     # the storage contains an array for each type of game object
     constructor : ->

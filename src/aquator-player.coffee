@@ -11,7 +11,7 @@ class StandardShot extends GameObject
         @destroyOnCollision = true
 
     initialize : (game) ->
-        @phys.force = new Vec2(0.1,0.0)    # standard shot is being accelerated
+        #@phys.force = new Vec2(0.0,0.0)    # standard shot is being accelerated
         @update(game)
         @
 
@@ -147,7 +147,7 @@ class PlayerShip extends GameObject
 
     initialize : (game) ->
         @setAnchor(0.5,0.5)
-        @setScale(2,2)
+        @setScale(2.0,2.0)
         @container.alpha = 0       # fade in
         @phys.pos.x = 200
         @phys.pos.y = game.canvas.height/2
@@ -162,7 +162,10 @@ class PlayerShip extends GameObject
         @
 
     collision : (game, collider) ->
-        @energy.addEnergy(-1)
+        if collider.playerDamage
+            @energy.addEnergy(-collider.playerDamage)
+        else
+            @energy.addEnergy(-1)        
         @
 
     update : (game) ->
@@ -191,7 +194,7 @@ class PlayerShip extends GameObject
         # fire shots with space bar
         if game.keys[32]==1
             if @shotctr==0
-                game.createSprite(new StandardShot(new Vec2(@container.position.x+10,@container.position.y+15),new Vec2(5,0) ))
+                game.createSprite(new StandardShot(new Vec2(@container.position.x+10,@container.position.y+15),new Vec2(10,0) ))
                 ++@shotctr
             if @shotctr==1
                 game.createAnimatedSprite(new BeamCharge(new Vec2(@container.position.x+20,@container.position.y+10)))
