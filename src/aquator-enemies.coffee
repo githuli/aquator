@@ -70,6 +70,9 @@ class Enemy extends GameObject
             #game.createSprite(new Explosion(@phys.pos.dup(), 0.15))  
             @explosion.pos = @getPos()
             game.createAnimatedSprite(@explosion)
+            score = game.repository.getNamedGObject('score')
+            if score and @score
+                score.addScore(@score)
         @
 
     collision : (game, collider) ->

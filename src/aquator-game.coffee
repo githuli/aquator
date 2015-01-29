@@ -182,12 +182,12 @@ class Game
         @canvas = document.getElementById('glcanvas');
         @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
 
-        @repository.removeGOBCB = (gobj) =>
+        #@repository.removeGOBCB = (gobj) =>
             # add this objects score to global score if it exists
-            if gobj.score
-                score = @repository.getNamedGObject('score')
-                if score
-                    score.addScore(gobj.score)
+            #if gobj.score
+            #    score = @repository.getNamedGObject('score')
+            #    if score
+            #        score.addScore(gobj.score)
 
         # initialize level
 
