@@ -112,16 +112,12 @@ class Explosion4 extends GameObject
             game.createEvent(new RemoveGOBEvent(game.repository, @))
 
 
-# text that fades in at a specific position, displays for a while and fades out
-class FadingText extends GameObject 
-    constructor: (position, text) ->
-        @type = "text"
-        @visualType = "Text"
-        @asset = { font: "20px Verdana", align: "center" }
-        @text = text
-        @pos = position
+class FadingSprite extends GameObject
+    constructor: (position) ->
+        @type = "sprite"
+        @pos  = position
         @fadetimer = 60
-        @displaytimer = 7*text.length
+        @displaytimer = 5*60
 
     initialize : (game) ->
         @container.alpha = 0.0
@@ -147,6 +143,40 @@ class FadingText extends GameObject
                     game.createEvent(new RemoveGOBEvent(game.repository, @))
                 else
                     @container.alpha = @count/@fadetimer
+
+
+# text that fades in at a specific position, displays for a while and fades out
+class FadingText extends FadingSprite 
+    constructor: (position, text) ->
+        super(position)
+        @type = "text"
+        @visualType = "Text"
+        @asset = { font: "20px Verdana", align: "center" }
+        @text = text
+        @pos = position
+        @fadetimer = 60
+        @displaytimer = 7*text.length
+
+
+class FadingImage extends FadingSprite
+    constructor: (position, asset) ->
+        super(position)
+        @asset = asset
+
+    initialize: (game) ->
+        super(game)
+        @setAnchor(0.5,0.5)
+        @wobble = new PIXI.WobbleFilter()
+        @wobble.scale.x = 0.001
+        @wobble.scale.y = 0.001
+        @container.filters = [ @wobble ]
+        @wobbleoff = new Vec2(0.1,0.0)
+        @wobbleinc = new Vec2(0.01,0.05)
+
+    update: (game) ->
+        @wobble.offset = @wobbleoff
+        @wobbleoff.add(@wobbleinc)        
+        super(game)
 
 # a "normal" sprite that blinks a given amount of times and then disappears
 class BlinkingSprite extends GameObject

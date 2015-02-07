@@ -1,87 +1,14 @@
 #------------------------------------------------------------
-# The main game class holds state and 
+# An application consists of multiple "parts", e.g. intro, menu, levels
+# Each part is 
+#
 
-class Game
+class ApplicationPart
     constructor : () ->
         @keys = new Array(256)
         @repository = new GameObjectRepository()
         @eventhandler = new GameEventHandler()
-        @assets = new AssetLibrary(
-            sprites:
-#                'ship'    : { file: "sprites/ship.png" },
-                'ship{0}' : { file: "sprites/ship{0}.png", startframe:0, endframe:5, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
-                'bubble'  : { file: "sprites/ship_tail.png"},
-                'bubble2' : { file: "sprites/bubble2.png"},
-                'missile' : { file: "sprites/missile.png" },
-                'beam'    : { file: "sprites/beam.png" },
-                'explosion1' : { file: "sprites/explosion1.png"},
-                'explosion2{0}' : { file: "sprites/ex1/image{0}.png", startframe:1, endframe:69 },
-                'explosion4{0}' : { file: "sprites/ex2/image{0}.png", startframe:1, endframe:54 },
-                'bg1'     : { file: "bg/layer1.png"},
-                'bg-middle': { file: "bg/bg-middle.png", scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST },
-                'bg1dist' : { file: "bg/layer1-dist.png"},
-                'bg2'     : { file: "bg/layer2.png"},
-                'bg1-3'   : { file: "bg/bg1-3.png"},
-                'bg-far'  : {file:  'bg/bg-far.png' },
-                'wobble1' : { file: "maps/displacementbg.png"},
-                'light'   : { file: "maps/light.png"},
-                'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
-                'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
-                'pullshotstart{0}' : { file: "sprites/pullshot/pull_shot_start{0}.png", startframe:0, endframe:1, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
-                'pullshotloop{0}' : { file: "sprites/pullshot/pull_shot_loop{0}.png", startframe:0, endframe:4, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
-                'verdana' : { font: "fonts/verdana.xml" },
-                'getready' : { file: "fonts/getready.png" },
-                'hbarl'   : { file: "ui/hbarl.gif" },
-                'hbarm'   : { file: "ui/hbarm.gif" },
-                'hbarr'   : { file: "ui/hbarr.gif" },
-                'shark'   : { file: "sprites/shark.png" },
-            datadir: 'res/'
-            layers:         # layers are rendered from front to back
-                'back0' : {}
-                'back1' : {}
-                'back2' : {}
-                'default' : {}
-                'enemies' : {}
-                'shipback'  : {}
-                'ship'  : {}
-                'shipfront' : {}
-                'front'  : {}
-                'ui'   : {}
-                'text' : {}
-            # predefined movement splines
-            movements:
-                'm1' : {
-                    frames: 350
-                    x:[1.2,1.2,1,0.9130859375,0.8349609375,0.744140625,0.654296875,0.55078125,0.451171875,0.3203125,0.2158203125,0.0986328125,0.001953125,-0.2,-0.2],
-                    y:[0.2,0.2,0.162109375,0.111328125,0.193359375,0.13671875,0.224609375,0.16796875,0.26953125,0.1875,0.35546875,0.21484375,0.611328125,0.6,0.6],
-                },
-                'm2' : {
-                    frames:350
-                    x:[1.2,1.2,1,0.9404296875,0.876953125,0.8046875,0.740234375,0.7158203125,0.7060546875,0.69921875,0.671875,0.6171875,0.5556640625,0.4970703125,0.447265625,0.412109375,0.3623046875,0.2919921875,0.2275390625,0.16796875,0.1123046875,0.060546875,0.009765625,-0.2,-0.2]
-                    y:[0.8,0.8,0.865234375,0.865234375,0.869140625,0.849609375,0.796875,0.73828125,0.677734375,0.62109375,0.5546875,0.490234375,0.45703125,0.439453125,0.439453125,0.439453125,0.43359375,0.40234375,0.318359375,0.2265625,0.1328125,0.072265625,0.04296875,-0.2,-0.2]
-                },
-                'm3' : {
-                    frames:500
-                    x:[1.2,1.2,0.9970703125,0.5673828125,0.1806640625,0.47265625,0.796875,0.1767578125,0.0029296875,-0.2,-0.2]
-                    y:[0.0,0.0,0.072265625,0.095703125,0.576171875,0.912109375,0.626953125,0.099609375,0.00390625,-0.2,-0.2]
-                },
-                'm4' : {
-                    frames:500
-                    x:[1.2,1.2,0.9951171875,0.404296875,0.8076171875,0.296875,0.6826171875,0.130859375,0.4736328125,0.2861328125,0.001953125,-0.2,-0.2]
-                    y:[0,0,0.076171875,0.203125,0.35546875,0.505859375,0.611328125,0.6640625,0.841796875,0.947265625,0.9824218750,1,1]
-                }
-        )
-
-
-        @flashFilter = new PIXI.ColorMatrixFilter()
-        @flashFilter.matrix =  [2.0,0,0,0,0,2.0,0,0,0,0,2.0,0,0,0,0,1]
-
-        # initialize movement keys
-        @keys[37]=0
-        @keys[38]=0
-        @keys[39]=0
-        @keys[40]=0
-        @
+        @bgcolor = 0x000000
 
     createEvent : (gevent) ->
         @eventhandler.createEvent(gevent)
@@ -160,27 +87,149 @@ class Game
 
     keyDownHandler : (e) =>
         @keys[e.keyCode] = 1
-        #console.log('keydown ' + e.keyIdentifier)
+        #console.log('keydown ' + e.keyIdentifier + ':' + e.keyCode)
         @
 
     keyUpHandler : (e) =>
         @keys[e.keyCode] = 0
-        #console.log('keyup ' + e.keyIdentifier)
+        #console.log('keyup ' + e.keyIdentifier +  ':' + e.keyCode)
         @
+
+    postStart : () =>
+        # assets have been loaded
+        document.onkeydown = @keyDownHandler
+        document.onkeyup = @keyUpHandler
+
+        @stage = new PIXI.Stage(@bgcolor);
+        @assets.initializeAssets(@stage)
+        @canvas = document.getElementById('glcanvas');
+        @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
+        @run()
+        @mainLoop()
 
     mainLoop : () =>
         @update()
         @renderer.render(@stage)
         requestAnimFrame(@mainLoop)
 
+    start : () ->
+        console.log("starting " + @constructor.name)
+        # load assets
+        loader = new PIXI.AssetLoader(@assets.getAssetLoaderList());
+        loader.onComplete = @postStart
+        loader.load();
+
+
+class Intro extends ApplicationPart
+    constructor : () ->
+        super
+        @assets = new AssetLibrary(
+            sprites:
+                'presents' : { file: "sprites/intro/presents.png" },
+                'logo'     : { file: "sprites/intro/title.png" },
+            datadir: 'res/'
+            
+            layers: 
+                'default' : {}
+        )
+
+    run : () ->
+        @createEvent(new GameEvent(1*60, 
+            => @createSprite(new FadingImage(new Vec2(@canvas.width/2,@canvas.height/2), 'presents'))
+        ))
+        @createEvent(new GameEvent(9*60, 
+            => @createSprite(new FadingImage(new Vec2(@canvas.width/2,@canvas.height/2), 'logo'))
+        ))
+        @createEvent(new GameEvent(16*60, => 
+            window.Intro = null
+            window.AquatorGame = new GameLevel1()
+            window.AquatorGame.start()
+        ))
+        @
+
+# The main game class holds state and 
+
+class GameLevel1 extends ApplicationPart
+    constructor : () ->
+        super
+        @bgcolor = 0x14184a
+        @assets = new AssetLibrary(
+            sprites:
+#                'ship'    : { file: "sprites/ship.png" },
+                'ship{0}' : { file: "sprites/ship{0}.png", startframe:0, endframe:5, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'bubble'  : { file: "sprites/ship_tail.png"},
+                'bubble2' : { file: "sprites/bubble2.png"},
+                'missile' : { file: "sprites/missile.png" },
+                'beam'    : { file: "sprites/beam.png" },
+                'explosion1' : { file: "sprites/explosion1.png"},
+                'explosion2{0}' : { file: "sprites/ex1/image{0}.png", startframe:1, endframe:69 },
+                'explosion4{0}' : { file: "sprites/ex2/image{0}.png", startframe:1, endframe:54 },
+                'bg1'     : { file: "bg/layer1.png"},
+                'bg-middle': { file: "bg/bg-middle.png", scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST },
+                'bg1dist' : { file: "bg/layer1-dist.png"},
+                'bg2'     : { file: "bg/layer2.png"},
+                'bg1-3'   : { file: "bg/bg1-3.png"},
+                'bg-far'  : {file:  'bg/bg-far.png' },
+                'wobble1' : { file: "maps/displacementbg.png"},
+                'light'   : { file: "maps/light.png"},
+                'fish{0}' : { file: "sprites/fish{0}.png", startframe:0, endframe:4  },
+                'pullshotload{0}' : { file: "sprites/pullshot/pull_shot_loading{0}.png", startframe:0, endframe:10, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'pullshotstart{0}' : { file: "sprites/pullshot/pull_shot_start{0}.png", startframe:0, endframe:1, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'pullshotloop{0}' : { file: "sprites/pullshot/pull_shot_loop{0}.png", startframe:0, endframe:4, scaleMode:PIXI.BaseTexture.SCALE_MODE.NEAREST  },
+                'verdana' : { font: "fonts/verdana.xml" },
+                'getready' : { file: "fonts/getready.png" },
+                'hbarl'   : { file: "ui/hbarl.gif" },
+                'hbarm'   : { file: "ui/hbarm.gif" },
+                'hbarr'   : { file: "ui/hbarr.gif" },
+                'shark'   : { file: "sprites/shark.png" },
+            datadir: 'res/'
+            layers:         # layers are rendered from front to back
+                'back0' : {}
+                'back1' : {}
+                'back2' : {}
+                'default' : {}
+                'enemies' : {}
+                'shipback'  : {}
+                'ship'  : {}
+                'shipfront' : {}
+                'front'  : {}
+                'ui'   : {}
+                'text' : {}
+            # predefined movement splines
+            movements:
+                'm1' : {
+                    frames: 350
+                    x:[1.2,1.2,1,0.9130859375,0.8349609375,0.744140625,0.654296875,0.55078125,0.451171875,0.3203125,0.2158203125,0.0986328125,0.001953125,-0.2,-0.2],
+                    y:[0.2,0.2,0.162109375,0.111328125,0.193359375,0.13671875,0.224609375,0.16796875,0.26953125,0.1875,0.35546875,0.21484375,0.611328125,0.6,0.6],
+                },
+                'm2' : {
+                    frames:350
+                    x:[1.2,1.2,1,0.9404296875,0.876953125,0.8046875,0.740234375,0.7158203125,0.7060546875,0.69921875,0.671875,0.6171875,0.5556640625,0.4970703125,0.447265625,0.412109375,0.3623046875,0.2919921875,0.2275390625,0.16796875,0.1123046875,0.060546875,0.009765625,-0.2,-0.2]
+                    y:[0.8,0.8,0.865234375,0.865234375,0.869140625,0.849609375,0.796875,0.73828125,0.677734375,0.62109375,0.5546875,0.490234375,0.45703125,0.439453125,0.439453125,0.439453125,0.43359375,0.40234375,0.318359375,0.2265625,0.1328125,0.072265625,0.04296875,-0.2,-0.2]
+                },
+                'm3' : {
+                    frames:500
+                    x:[1.2,1.2,0.9970703125,0.5673828125,0.1806640625,0.47265625,0.796875,0.1767578125,0.0029296875,-0.2,-0.2]
+                    y:[0.0,0.0,0.072265625,0.095703125,0.576171875,0.912109375,0.626953125,0.099609375,0.00390625,-0.2,-0.2]
+                },
+                'm4' : {
+                    frames:500
+                    x:[1.2,1.2,0.9951171875,0.404296875,0.8076171875,0.296875,0.6826171875,0.130859375,0.4736328125,0.2861328125,0.001953125,-0.2,-0.2]
+                    y:[0,0,0.076171875,0.203125,0.35546875,0.505859375,0.611328125,0.6640625,0.841796875,0.947265625,0.9824218750,1,1]
+                }
+        )
+
+        @flashFilter = new PIXI.ColorMatrixFilter()
+        @flashFilter.matrix =  [2.0,0,0,0,0,2.0,0,0,0,0,2.0,0,0,0,0,1]
+
+        # initialize movement keys
+        @keys[37]=0
+        @keys[38]=0
+        @keys[39]=0
+        @keys[40]=0
+        @
+
     run : () =>
-        # assets have been loaded
-        document.onkeydown = @keyDownHandler
-        document.onkeyup = @keyUpHandler
-        @stage = new PIXI.Stage(0x14184a);
-        @assets.initializeAssets(@stage)
-        @canvas = document.getElementById('glcanvas');
-        @renderer = PIXI.autoDetectRenderer(@canvas.width, @canvas.height, @canvas);
 
         #@repository.removeGOBCB = (gobj) =>
             # add this objects score to global score if it exists
@@ -251,18 +300,17 @@ class Game
             @createText(new FadingText(new Vec2(2000, 600), "So Long, and Thanks For All the Fish"))
         ))
 
-        @renderer.render(@stage)
-        @mainLoop()
+        #@renderer.render(@stage)
+        #@mainLoop()
         @
 
-    start : () ->
-        console.log("starting up AQUATOR..")
-        # load assets
-        loader = new PIXI.AssetLoader(@assets.getAssetLoaderList());
-        loader.onComplete = @run
-        loader.load();
+
 
 
 window.Tools = Tools
-window.AquatorGame = new Game()
-window.AquatorGame.start()
+#window.AquatorGame = new GameLevel1()
+#window.AquatorGame.start()
+
+window.Intro = new Intro()
+window.Intro.start()
+
